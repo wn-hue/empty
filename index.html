@@ -42,7 +42,6 @@
 
   .container { max-width: 1440px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
 
-  /* 헤더 & 날짜 네비게이터 */
   header {
     background: var(--bg-card);
     border: 1px solid var(--border);
@@ -75,7 +74,6 @@
     text-align: center;
   }
 
-  /* 탭 네비게이션 */
   .main-nav {
     display: flex;
     gap: 6px;
@@ -103,7 +101,6 @@
   .tab-pane { display: none; }
   .tab-pane.active { display: block; }
 
-  /* 카드 공통 */
   .card {
     background: var(--bg-card);
     border: 1px solid var(--border);
@@ -126,7 +123,6 @@
     flex-wrap: wrap;
   }
 
-  /* 2단 분할 레이아웃 (보고서 메인 전용) */
   .report-workspace {
     display: grid;
     grid-template-columns: 1fr;
@@ -136,7 +132,6 @@
     .report-workspace { grid-template-columns: 1.15fr 0.85fr; }
   }
 
-  /* 알림 배너 */
   .alert-banner {
     padding: 10px 14px;
     border-radius: 6px;
@@ -147,10 +142,8 @@
     gap: 8px;
   }
   .alert-banner.warning { background: var(--warning-light); color: #92400e; border: 1px solid #fde68a; }
-  .alert-banner.danger { background: var(--danger-light); color: #991b1b; border: 1px solid #fecaca; }
   .alert-banner.purple { background: var(--purple-light); color: #5b21b6; border: 1px solid #ddd6fe; }
 
-  /* 카테고리별 PM 아이템 리스트 */
   .pm-group {
     background: #f8fafc;
     border: 1px solid var(--border-light);
@@ -162,7 +155,6 @@
     font-weight: 700;
     color: var(--text-secondary);
     margin-bottom: 6px;
-    text-transform: uppercase;
   }
   .pm-pill-list { display: flex; flex-wrap: wrap; gap: 6px; }
   .pm-pill {
@@ -178,7 +170,6 @@
   }
   .pm-pill.highlight { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
 
-  /* 배지 스타일 */
   .badge {
     font-size: 11px;
     padding: 2px 6px;
@@ -189,11 +180,8 @@
   .badge-blue { background: var(--accent-light); color: var(--accent); }
   .badge-purple { background: var(--purple-light); color: var(--purple); }
   .badge-green { background: var(--success-light); color: var(--success); }
-  .badge-yellow { background: var(--warning-light); color: var(--warning); }
-  .badge-red { background: var(--danger-light); color: var(--danger); }
   .badge-sub { background: #e2e8f0; color: #475569; }
 
-  /* 입력 폼 */
   input, select, textarea {
     background: #ffffff;
     border: 1px solid var(--border);
@@ -223,7 +211,6 @@
   .btn-success:hover { background: #15803d; }
   .btn-sm { padding: 4px 8px; font-size: 11.5px; }
 
-  /* 우측 보고서 텍스트 영역 */
   .report-textarea {
     width: 100%;
     height: 480px;
@@ -239,7 +226,6 @@
     white-space: pre-wrap;
   }
 
-  /* 테이블 스타일 */
   .table-responsive { width: 100%; overflow-x: auto; border: 1px solid var(--border-light); border-radius: 8px; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
   th, td { padding: 9px 12px; border: 1px solid var(--border-light); text-align: left; }
@@ -263,11 +249,10 @@
 <body>
 
 <div class="container">
-  <!-- 상단 공통 헤더 및 날짜 컨트롤러 -->
   <header>
     <div class="header-title">
       <h1>동도금 PM 일일 보고 & 스케줄 플래너</h1>
-      <p>일정 자동 판정 엔진 · 특이사항 원클릭 취합 · 일일 보고서 텍스트 생성</p>
+      <p>당일 PM 및 익일 08:30 마감 기준 자동 산출 · 특이사항 연동</p>
     </div>
     
     <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
@@ -281,25 +266,21 @@
     </div>
   </header>
 
-  <!-- 메인 탭 -->
   <div class="main-nav">
-    <button class="nav-btn active" id="tabBtnReport" onclick="switchTab('report')">📋 오늘의 PM 브리핑 & 보고 (메인)</button>
+    <button class="nav-btn active" id="tabBtnReport" onclick="switchTab('report')">📋 오늘의 PM 브리핑 & 보고</button>
     <button class="nav-btn" id="tabBtnMatrix" onclick="switchTab('matrix')">🗓️ 주간 PM 매트릭스</button>
-    <button class="nav-btn" id="tabBtnCycle" onclick="switchTab('cycle')">🧪 화학동 & 펄스 주기 관리</button>
+    <button class="nav-btn" id="tabBtnCycle" onclick="switchTab('cycle')">🧪 화학동 & 펄스 주기 설정</button>
   </div>
 
-  <!-- [화면 1] 오늘의 PM 브리핑 & 보고 (원스톱 업무 화면) -->
+  <!-- [탭 1] 브리핑 메인 화면 -->
   <div id="tabReport" class="tab-pane active">
-    <!-- 조건부 경보 배너 영역 -->
     <div id="alertBannerContainer" style="display:flex; flex-direction:column; gap:6px; margin-bottom:12px;"></div>
 
     <div class="report-workspace">
-      <!-- 좌측: 일정 요약 및 당일 변동사항 입력 -->
       <div style="display:flex; flex-direction:column; gap:12px;">
         <div class="card">
           <div class="card-header">
             <span>⚙️ 기준 설정</span>
-            <span style="font-size:11.5px; color:var(--text-secondary);">수정 시 보고서에 즉시 반영됩니다.</span>
           </div>
           <div style="display:flex; gap:12px; flex-wrap:wrap;">
             <div style="display:flex; align-items:center; gap:6px;">
@@ -313,10 +294,9 @@
           </div>
         </div>
 
-        <!-- 오늘 판정된 PM 요약 -->
         <div class="card">
           <div class="card-header">
-            <span>🔍 자동 추출된 금일 정기 PM</span>
+            <span>🔍 자동 추출된 PM 요약</span>
             <span class="badge badge-blue" id="dayOfWeekBadge">요일</span>
           </div>
           <div style="display:flex; flex-direction:column; gap:8px;">
@@ -329,21 +309,19 @@
               <div class="pm-pill-list" id="listDesmear"></div>
             </div>
             <div class="pm-group">
-              <div class="pm-group-title">일반 화학동 (72시간 주기 도래)</div>
+              <div class="pm-group-title">화학동 (당일 PM & 익일 08:30 이전)</div>
               <div class="pm-pill-list" id="listChem"></div>
             </div>
             <div class="pm-group">
-              <div class="pm-group-title">전기동 (정기 & 펄스)</div>
+              <div class="pm-group-title">전기동</div>
               <div class="pm-pill-list" id="listElectro"></div>
             </div>
           </div>
         </div>
 
-        <!-- 당일 라인별 특이사항 즉시 추가 -->
         <div class="card">
           <div class="card-header">
             <span>✏️ 금일 특이사항 빠른 추가</span>
-            <span style="font-size:11.5px; color:var(--text-secondary);">해당 라인 옆에 자동 괄호 삽입됩니다.</span>
           </div>
           <div style="display:flex; gap:6px; flex-wrap:wrap;">
             <select id="quickLineSelect" style="width:130px;">
@@ -364,7 +342,7 @@
               <option value="화13">화13</option>
               <option value="화14">화14</option>
             </select>
-            <input type="text" id="quickNoteText" placeholder="직접 입력 또는 아래 버튼 클릭" style="flex:1; min-width:160px;">
+            <input type="text" id="quickNoteText" placeholder="내용 입력 또는 아래 버튼 클릭" style="flex:1; min-width:160px;">
             <button class="btn" onclick="addTodayNote()">추가</button>
           </div>
           <div style="display:flex; gap:5px; flex-wrap:wrap;">
@@ -379,7 +357,6 @@
         </div>
       </div>
 
-      <!-- 우측: 생성된 보고서 & 복사 버튼 -->
       <div class="card" style="height:fit-content;">
         <div class="card-header">
           <span>📋 최종 PM 보고문</span>
@@ -390,7 +367,7 @@
     </div>
   </div>
 
-  <!-- [화면 2] 주간 PM 매트릭스 -->
+  <!-- [탭 2] 주간 PM 매트릭스 -->
   <div id="tabMatrix" class="tab-pane">
     <div class="card">
       <div class="card-header">
@@ -398,7 +375,7 @@
           <span>🗓️ 주간 PM 종합 매트릭스 (월~일)</span>
           <span class="badge badge-blue" id="matrixWeekRange"></span>
         </div>
-        <span style="font-size:12px; color:var(--text-secondary);">요일을 클릭하면 해당 날짜의 보고서로 바로 이동합니다.</span>
+        <span style="font-size:12px; color:var(--text-secondary);">요일을 클릭하면 해당 날짜로 즉시 전환됩니다.</span>
       </div>
       <div class="table-responsive">
         <table>
@@ -475,26 +452,23 @@
     </div>
   </div>
 
-  <!-- [화면 3] 주기 설정 관리 (화학동 72H & 펄스 120일) -->
+  <!-- [탭 3] 화학동 및 펄스 주기 설정 (연도 제거, 분단위 0/30분 고정) -->
   <div id="tabCycle" class="tab-pane">
     <div style="display:grid; grid-template-columns:1fr; gap:14px;">
-      <!-- 화학동 최근 완료 일시 관리 -->
       <div class="card">
         <div class="card-header">
-          <span>🧪 화학동 72시간 주기 기준 설정</span>
+          <span>🧪 화학동 주기 설정 (년도 고정 / 0분·30분 단위)</span>
           <button class="btn btn-sm" onclick="saveCycles()">설정 저장 및 동기화</button>
-        </div>
-        <div style="font-size:12px; color:var(--text-secondary);">
-          최근 완료 일시를 입력해 두면 <strong>72시간 후 시점이 계산되어 당일 보고서에 자동으로 포함</strong>됩니다.
         </div>
         <div class="table-responsive">
           <table>
             <thead>
               <tr>
-                <th>라인</th>
-                <th>최근 완료 일시 (기준)</th>
-                <th>다음 PM 예정 시점 (+72H)</th>
-                <th>특이사항 / 비고</th>
+                <th style="width:70px;">라인</th>
+                <th style="width:90px;">상태</th>
+                <th style="width:280px;">작업 일시 (월-일 시:분)</th>
+                <th style="width:160px;">차기 PM 예정 (+72H)</th>
+                <th>비고</th>
               </tr>
             </thead>
             <tbody id="chemSettingTableBody"></tbody>
@@ -502,21 +476,17 @@
         </div>
       </div>
 
-      <!-- 펄스 120일 액퍼내기 관리 -->
       <div class="card">
         <div class="card-header">
-          <span>💧 펄스라인 액퍼내기 주기 관리 (120일)</span>
+          <span>💧 펄스라인 액퍼내기 관리 (120일)</span>
           <button class="btn btn-sm" onclick="saveCycles()">설정 저장 및 동기화</button>
-        </div>
-        <div style="font-size:12px; color:var(--text-secondary);">
-          작업일 기준 1차(+120일), 2차(+240일), 3차(+360일) 일정이 산출되며, <strong>4주(28일) 전 진입 시 상단에 리마인드가 점등</strong>됩니다.
         </div>
         <div class="table-responsive">
           <table>
             <thead>
               <tr>
                 <th>라인</th>
-                <th>최근 액퍼내기 작업일</th>
+                <th style="width:180px;">최근 작업일 (월-일)</th>
                 <th>차기 예정일 (1차)</th>
                 <th>D-Day 상태</th>
               </tr>
@@ -530,7 +500,6 @@
 </div>
 
 <script>
-// Firebase 설정
 const firebaseConfig = {
   apiKey: "AIzaSyAoX8WeDRc0lzKB1x-QB501Fd_WatuyCR0",
   authDomain: "pm1234-3069b.firebaseapp.com",
@@ -545,12 +514,13 @@ const firebaseConfig = {
 let db = null;
 let isFirebaseConnected = false;
 
+// 1번 요청: 이미지 기준 최신 화학동 데이터 정합
 const DEFAULT_CHEM = [
-  { id: '화7', lastDone: '2026-09-25T00:00', note: '0시PM' },
-  { id: '화8', lastDone: '2026-09-23T18:30', note: '' },
-  { id: '화9', lastDone: '2026-09-24T19:30', note: '' },
-  { id: '화13', lastDone: '2026-09-22T13:00', note: '13시 촉매건욕' },
-  { id: '화14', lastDone: '2026-09-24T15:00', note: '' }
+  { id: '화7', lastDone: '2026-09-25T16:00', status: '완료', note: '0시PM중' },
+  { id: '화8', lastDone: '2026-09-23T18:30', status: '완료', note: '' },
+  { id: '화9', lastDone: '2026-09-24T19:30', status: '완료', note: '' },
+  { id: '화13', lastDone: '2026-09-25T13:00', status: '시작', note: '13시 촉매건욕' },
+  { id: '화14', lastDone: '2026-09-24T15:00', status: '완료', note: '' }
 ];
 
 const DEFAULT_PULSE = [
@@ -566,12 +536,11 @@ const ANCHOR_BIWEEK = {
   wash1: new Date('2026-09-28T00:00:00')
 };
 
-// 통합 스토리지 키 (v26)
-let chemList = JSON.parse(localStorage.getItem('chem_data_v26')) || DEFAULT_CHEM;
-let pulseList = JSON.parse(localStorage.getItem('pulse_data_v26')) || DEFAULT_PULSE;
-let manualNotes = JSON.parse(localStorage.getItem('manual_notes_v26')) || [];
+let chemList = JSON.parse(localStorage.getItem('chem_data_v27')) || DEFAULT_CHEM;
+let pulseList = JSON.parse(localStorage.getItem('pulse_data_v27')) || DEFAULT_PULSE;
+let manualNotes = JSON.parse(localStorage.getItem('manual_notes_v27')) || [];
 
-let currentDate = new Date();
+let currentDate = new Date('2026-09-25T00:00:00');
 
 function formatDateOnly(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -598,7 +567,6 @@ function checkBiWeek(anchorDate, targetDate) {
   return (Math.abs(diffWeeks) % 2 === 0);
 }
 
-// Firebase 초기화
 function initFirebase() {
   const statusEl = document.getElementById('syncStatus');
   try {
@@ -613,7 +581,7 @@ function initFirebase() {
           : `<span style="color:var(--warning);">🟡 로컬 모드</span>`;
       });
 
-      db.ref('pm_system_data_v26').on('value', snap => {
+      db.ref('pm_system_data_v27').on('value', snap => {
         const val = snap.val();
         if (val) {
           if (val.chemList) chemList = val.chemList;
@@ -629,19 +597,18 @@ function initFirebase() {
 }
 
 function syncToStorage() {
-  localStorage.setItem('chem_data_v26', JSON.stringify(chemList));
-  localStorage.setItem('pulse_data_v26', JSON.stringify(pulseList));
-  localStorage.setItem('manual_notes_v26', JSON.stringify(manualNotes));
+  localStorage.setItem('chem_data_v27', JSON.stringify(chemList));
+  localStorage.setItem('pulse_data_v27', JSON.stringify(pulseList));
+  localStorage.setItem('manual_notes_v27', JSON.stringify(manualNotes));
 
   if (db && isFirebaseConnected) {
-    db.ref('pm_system_data_v26').set({
+    db.ref('pm_system_data_v27').set({
       chemList, pulseList, manualNotes,
       lastUpdated: new Date().toISOString()
     }).catch(err => console.error("Firebase Sync Error", err));
   }
 }
 
-// 탭 전환
 function switchTab(t) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
@@ -661,7 +628,6 @@ function switchTab(t) {
   }
 }
 
-// 날짜 변경 함수
 function shiftDate(delta) {
   currentDate.setDate(currentDate.getDate() + delta);
   renderAll();
@@ -678,7 +644,6 @@ function selectDate(dateStr) {
   renderAll();
 }
 
-// 전체 렌더링
 function renderAll() {
   updateDateHeader();
   renderReportTab();
@@ -697,16 +662,14 @@ function updateDateHeader() {
   document.getElementById('dayOfWeekBadge').innerText = `${dow}요일 PM`;
 }
 
-// [메인 탭] 리포트 및 요약 렌더링
+// [브리핑 추출 및 리포트 렌더링]
 function renderReportTab() {
   const day = currentDate.getDay();
   const curDateStr = formatDateOnly(currentDate);
 
-  // 1. 배너 알림 판정 (화8 빌드업 & 펄스 D-Day)
   const bannerContainer = document.getElementById('alertBannerContainer');
   bannerContainer.innerHTML = '';
 
-  // 화8 48H 체크
   const hwa8 = chemList.find(c => c.id === '화8');
   if (hwa8) {
     const hwa8Done = new Date(hwa8.lastDone);
@@ -714,13 +677,12 @@ function renderReportTab() {
     if (new Date() >= limit48h) {
       bannerContainer.innerHTML += `
         <div class="alert-banner warning">
-          ⚠️ <strong>[화8 주의]</strong> 직전 작업 후 48시간이 경과하여 <strong>빌드업 금지</strong> 적용 중입니다.
+          ⚠️ <strong>[화8 주의]</strong> 작업 후 48시간이 경과하여 <strong>빌드업 금지</strong> 적용 중입니다.
         </div>
       `;
     }
   }
 
-  // 펄스 120일 D-Day 리마인드 체크
   pulseList.forEach(p => {
     const base = new Date(p.lastDate + 'T00:00:00');
     const d1 = new Date(base.getTime() + 120 * 86400000);
@@ -734,7 +696,6 @@ function renderReportTab() {
     }
   });
 
-  // 2. 오늘 날짜 특이사항 칩 표시
   const noteContainer = document.getElementById('todayNotesList');
   noteContainer.innerHTML = '';
   const todaysNotes = manualNotes.filter(n => n.date === curDateStr);
@@ -747,10 +708,7 @@ function renderReportTab() {
     `;
   });
 
-  // 3. 오늘 PM 항목 자동 산출
   renderTodayPills(day, curDateStr);
-
-  // 4. 보고서 텍스트 생성
   generateReport();
 }
 
@@ -774,7 +732,6 @@ function renderTodayPills(day, curDateStr) {
   if (day === 3) debarrList.innerHTML += `<span class="pm-pill">데버링 3</span>`;
   if (day === 5) debarrList.innerHTML += `<span class="pm-pill">데버링 2</span>`;
 
-  // 디스미어 & 블랙홀
   if (day === 1) {
     desmearList.innerHTML += `<span class="pm-pill">디스미어 8</span>`;
     if (checkBiWeek(ANCHOR_BIWEEK.des11, currentDate)) {
@@ -792,7 +749,6 @@ function renderTodayPills(day, curDateStr) {
     desmearList.innerHTML += `<span class="pm-pill">디스미어 10</span><span class="pm-pill highlight">화10 정기PM</span>`;
   }
 
-  // 전기동
   if (day === 1) {
     electroList.innerHTML += `<span class="pm-pill highlight">전기동 9 (펄스)</span><span class="pm-pill">전기동 16</span>`;
   } else if (day === 2) {
@@ -806,27 +762,35 @@ function renderTodayPills(day, curDateStr) {
     electroList.innerHTML += `<span class="pm-pill">전기동 13</span><span class="pm-pill highlight">전기동 21 (펄스)</span>`;
   }
 
-  // 화학동 (72H 계산)
-  const windowStart = new Date(currentDate.getTime() + 8.5 * 3600000);
-  const windowEnd = new Date(currentDate.getTime() + 32.5 * 3600000);
-  let matchedChems = [];
+  // 3 & 4번 수정: 당일 00:00 ~ 익일 08:30 기준 화학동 필터링
+  const winStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), 0, 0, 0);
+  const winEnd = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + 1, 8, 30, 0);
 
+  let matchedChems = [];
   chemList.forEach(c => {
-    const t = new Date(c.lastDone);
-    const nextDue = new Date(t.getTime() + 72 * 3600000);
-    if (nextDue >= windowStart && nextDue <= windowEnd) {
-      matchedChems.push(`${c.id} (${formatTimeKr(nextDue.getHours(), nextDue.getMinutes())})`);
+    const actDate = new Date(c.lastDone);
+    const nextDue = new Date(actDate.getTime() + 72 * 3600000);
+
+    // 조건 1: 당일 시작/진행 중이거나 작업일자가 당일인 경우 (화13 누락 방지)
+    if (formatDateOnly(actDate) === curDateStr) {
+      const timeStr = c.note || formatTimeKr(actDate.getHours(), actDate.getMinutes()) + ' PM';
+      matchedChems.push(`${c.id} (${timeStr})`);
+    }
+    // 조건 2: 72시간 주기 도래가 당일 00:00 ~ 익일 08:30 사이인 경우
+    else if (nextDue >= winStart && nextDue <= winEnd) {
+      const isNextDay = (nextDue.getDate() !== currentDate.getDate());
+      const prefix = isNextDay ? `익일(${nextDue.getDate()}일) ` : '';
+      matchedChems.push(`${c.id} (${prefix}${formatTimeKr(nextDue.getHours(), nextDue.getMinutes())})`);
     }
   });
 
   if (matchedChems.length > 0) {
     matchedChems.forEach(txt => chemListEl.innerHTML += `<span class="pm-pill highlight">${txt}</span>`);
   } else {
-    chemListEl.innerHTML = `<span style="font-size:12px; color:var(--text-secondary);">금일 예정된 화학동 72H PM이 없습니다.</span>`;
+    chemListEl.innerHTML = `<span style="font-size:12px; color:var(--text-secondary);">-</span>`;
   }
 }
 
-// 텍스트 생성
 function generateReport() {
   const m = currentDate.getMonth() + 1;
   const d = currentDate.getDate();
@@ -880,25 +844,35 @@ function generateReport() {
     electro.push(`전21 탈지 산세 박리건욕 (7시 30분패스)${getNote('전기동 21')}`);
   }
 
-  // 화학동
-  const windowStart = new Date(currentDate.getTime() + 8.5 * 3600000);
-  const windowEnd = new Date(currentDate.getTime() + 32.5 * 3600000);
+  // 3 & 4번 핵심 로직: 25일 당일 PM + 26일 08:30 이전 건만 엄격 포함
+  const winStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), 0, 0, 0);
+  const winEnd = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + 1, 8, 30, 0);
+
   chemList.forEach(c => {
-    const t = new Date(c.lastDone);
-    const nextDue = new Date(t.getTime() + 72 * 3600000);
+    const actDate = new Date(c.lastDone);
+    const nextDue = new Date(actDate.getTime() + 72 * 3600000);
     const manualNote = getNote(c.id);
 
-    if (nextDue >= windowStart && nextDue <= windowEnd) {
+    // 1) 당일 작업/예정된 건 (예: 화13)
+    if (formatDateOnly(actDate) === curDateStr) {
+      let desc = c.note || '기본PM';
+      if (manualNote) desc += manualNote;
+      chems.push(`${c.id} ${desc}`);
+    }
+    // 2) 72시간 주기 도래가 당일 00:00 ~ 익일 08:30 사이인 경우
+    else if (nextDue >= winStart && nextDue <= winEnd) {
+      const isNextDay = (nextDue.getDate() !== currentDate.getDate());
+      const prefix = isNextDay ? `익일(${nextDue.getDate()}일) ` : '';
       const timeKr = formatTimeKr(nextDue.getHours(), nextDue.getMinutes());
-      const prefix = (nextDue.getDate() !== currentDate.getDate()) ? `익일(${nextDue.getDate()}일) ` : '';
       const noteText = manualNote || (c.note ? ` ${c.note}` : ' 기본PM');
       chems.push(`${c.id} ${prefix}${timeKr}${noteText}`);
-    } else if (manualNote) {
+    }
+    // 3) 수동 특이사항만 등록된 경우
+    else if (manualNote) {
       chems.push(`${c.id} ${manualNote}`);
     }
   });
 
-  // 최종 조합
   let out = `동도금 ${m}월 ${d}일 PM일정\n\n`;
   if (debarr) out += `${debarr}\n\n`;
   if (wash) out += `${wash}\n\n`;
@@ -917,7 +891,6 @@ function generateReport() {
   document.getElementById('reportOutput').value = out;
 }
 
-// 특이사항 추가/삭제
 function addTodayNote() {
   const line = document.getElementById('quickLineSelect').value;
   const text = document.getElementById('quickNoteText').value.trim();
@@ -935,10 +908,7 @@ function addTodayNote() {
   renderReportTab();
 }
 
-function setQuickText(val) {
-  document.getElementById('quickNoteText').value = val;
-}
-
+function setQuickText(val) { document.getElementById('quickNoteText').value = val; }
 function deleteNote(id) {
   manualNotes = manualNotes.filter(n => n.id !== id);
   syncToStorage();
@@ -968,13 +938,15 @@ function renderMatrixTab() {
     th.style.cursor = 'pointer';
     th.onclick = () => selectDate(dStr);
 
-    // 화학동 매칭
     const cell = document.getElementById(`m_chem_${i+1}`);
     cell.innerHTML = '';
     let matches = [];
     chemList.forEach(c => {
-      const due = new Date(new Date(c.lastDone).getTime() + 72 * 3600000);
-      if (formatDateOnly(due) === dStr) {
+      const act = new Date(c.lastDone);
+      const due = new Date(act.getTime() + 72 * 3600000);
+      if (formatDateOnly(act) === dStr) {
+        matches.push(`<strong>${c.id}</strong> <span style="color:var(--purple);">(당일 PM)</span>`);
+      } else if (formatDateOnly(due) === dStr) {
         matches.push(`<strong>${c.id}</strong> <span style="color:var(--accent);">(${formatTimeKr(due.getHours(), due.getMinutes())})</span>`);
       }
     });
@@ -997,36 +969,72 @@ function setTag(id, isThisWeek) {
   el.className = isThisWeek ? 'badge badge-green' : 'badge badge-sub';
 }
 
-// [주기 설정 탭]
+// [2번 수정: 년도 제거 & 0/30분 단위 셀렉터 적용]
 function renderCycleSettings() {
-  // 화학동
   const chemBody = document.getElementById('chemSettingTableBody');
   chemBody.innerHTML = '';
+
   chemList.forEach((c, idx) => {
-    const due = new Date(new Date(c.lastDone).getTime() + 72 * 3600000);
+    const act = new Date(c.lastDone);
+    const m = isNaN(act.getTime()) ? (new Date().getMonth()+1) : (act.getMonth()+1);
+    const d = isNaN(act.getTime()) ? new Date().getDate() : act.getDate();
+    const h = isNaN(act.getTime()) ? 0 : act.getHours();
+    const min = isNaN(act.getTime()) ? 0 : (act.getMinutes() >= 30 ? 30 : 0);
+
+    const due = new Date(act.getTime() + 72 * 3600000);
+
+    let hOptions = '';
+    for (let i = 0; i <= 23; i++) {
+      hOptions += `<option value="${i}" ${i === h ? 'selected' : ''}>${i}시</option>`;
+    }
+
     chemBody.innerHTML += `
       <tr>
         <td><strong>${c.id}</strong></td>
         <td>
-          <input type="datetime-local" value="${c.lastDone}" id="chem_input_${idx}" style="font-size:12px;">
+          <select id="chem_st_${idx}" style="padding:4px;">
+            <option value="완료" ${c.status === '완료' ? 'selected' : ''}>완료</option>
+            <option value="시작" ${c.status === '시작' ? 'selected' : ''}>시작</option>
+            <option value="분석" ${c.status === '분석' ? 'selected' : ''}>분석</option>
+          </select>
         </td>
-        <td><strong style="color:var(--accent);">${formatDateOnly(due)} ${formatTimeKr(due.getHours(), due.getMinutes())}</strong></td>
-        <td><input type="text" value="${c.note || ''}" id="chem_note_${idx}" placeholder="비고"></td>
+        <td>
+          <div style="display:inline-flex; align-items:center; gap:3px;">
+            <input type="number" id="chem_m_${idx}" value="${m}" min="1" max="12" style="width:42px; text-align:center; padding:4px;">월
+            <input type="number" id="chem_d_${idx}" value="${d}" min="1" max="31" style="width:42px; text-align:center; padding:4px;">일
+            <select id="chem_h_${idx}" style="padding:4px;">${hOptions}</select>
+            <select id="chem_min_${idx}" style="padding:4px;">
+              <option value="0" ${min === 0 ? 'selected' : ''}>00분</option>
+              <option value="30" ${min === 30 ? 'selected' : ''}>30분</option>
+            </select>
+          </div>
+        </td>
+        <td><strong style="color:var(--accent);">${formatDateOnly(due).slice(5)} ${formatTimeKr(due.getHours(), due.getMinutes())}</strong></td>
+        <td><input type="text" value="${c.note || ''}" id="chem_note_${idx}" placeholder="비고" style="width:100%;"></td>
       </tr>
     `;
   });
 
-  // 펄스
   const pulseBody = document.getElementById('pulseSettingTableBody');
   pulseBody.innerHTML = '';
   pulseList.forEach((p, idx) => {
-    const d1 = new Date(new Date(p.lastDate + 'T00:00:00').getTime() + 120 * 86400000);
+    const act = new Date(p.lastDate + 'T00:00:00');
+    const m = isNaN(act.getTime()) ? (new Date().getMonth()+1) : (act.getMonth()+1);
+    const d = isNaN(act.getTime()) ? new Date().getDate() : act.getDate();
+
+    const d1 = new Date(act.getTime() + 120 * 86400000);
     const diff = Math.ceil((d1 - new Date()) / 86400000);
+
     pulseBody.innerHTML += `
       <tr>
         <td><strong>${p.line}</strong></td>
-        <td><input type="date" value="${p.lastDate}" id="pulse_input_${idx}"></td>
-        <td><strong>${formatDateOnly(d1)}</strong></td>
+        <td>
+          <div style="display:inline-flex; align-items:center; gap:3px;">
+            <input type="number" id="pulse_m_${idx}" value="${m}" min="1" max="12" style="width:42px; text-align:center; padding:4px;">월
+            <input type="number" id="pulse_d_${idx}" value="${d}" min="1" max="31" style="width:42px; text-align:center; padding:4px;">일
+          </div>
+        </td>
+        <td><strong>${formatDateOnly(d1).slice(5)}</strong></td>
         <td><span class="badge ${diff <= 28 ? 'badge-purple' : 'badge-green'}">D-${diff}</span></td>
       </tr>
     `;
@@ -1034,20 +1042,29 @@ function renderCycleSettings() {
 }
 
 function saveCycles() {
+  const curYear = new Date().getFullYear();
+
   chemList.forEach((c, idx) => {
-    const val = document.getElementById(`chem_input_${idx}`).value;
-    const note = document.getElementById(`chem_note_${idx}`).value;
-    if (val) c.lastDone = val;
+    const st = document.getElementById(`chem_st_${idx}`).value;
+    const m = String(document.getElementById(`chem_m_${idx}`).value).padStart(2, '0');
+    const d = String(document.getElementById(`chem_d_${idx}`).value).padStart(2, '0');
+    const h = String(document.getElementById(`chem_h_${idx}`).value).padStart(2, '0');
+    const min = String(document.getElementById(`chem_min_${idx}`).value).padStart(2, '0');
+    const note = document.getElementById(`chem_note_${idx}`).value.trim();
+
+    c.status = st;
+    c.lastDone = `${curYear}-${m}-${d}T${h}:${min}`;
     c.note = note;
   });
 
   pulseList.forEach((p, idx) => {
-    const val = document.getElementById(`pulse_input_${idx}`).value;
-    if (val) p.lastDate = val;
+    const m = String(document.getElementById(`pulse_m_${idx}`).value).padStart(2, '0');
+    const d = String(document.getElementById(`pulse_d_${idx}`).value).padStart(2, '0');
+    p.lastDate = `${curYear}-${m}-${d}`;
   });
 
   syncToStorage();
-  alert('주기 설정이 저장 및 동기화되었습니다.');
+  alert('설정이 저장 및 Firebase에 동기화되었습니다.');
   renderAll();
 }
 
