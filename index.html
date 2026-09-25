@@ -213,7 +213,7 @@
 
   .report-textarea {
     width: 100%;
-    height: 480px;
+    height: 520px;
     background: #f8fafc;
     border: 1px solid var(--border);
     border-radius: 8px;
@@ -244,6 +244,18 @@
     margin: 2px;
   }
   .note-tag button { background: none; border: none; color: #9a3412; cursor: pointer; font-weight: bold; }
+
+  .elec-type-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    background: #ffffff;
+    border: 1px solid var(--border-light);
+    padding: 6px 10px;
+    border-radius: 6px;
+    flex-wrap: wrap;
+  }
 </style>
 </head>
 <body>
@@ -278,13 +290,15 @@
 
     <div class="report-workspace">
       <div style="display:flex; flex-direction:column; gap:12px;">
+        
+        <!-- 기준 설정 & 전기동 유형 커스텀 -->
         <div class="card">
           <div class="card-header">
-            <span>⚙️ 기준 설정</span>
+            <span>⚙️ 기준 설정 & 금일 전기동 PM 유형</span>
           </div>
           <div style="display:flex; gap:12px; flex-wrap:wrap;">
             <div style="display:flex; align-items:center; gap:6px;">
-              <label style="font-weight:700;">패스 기준:</label>
+              <label style="font-weight:700;">기본 패스 기준:</label>
               <input type="text" id="passTimeInput" value="7시패스" style="width:90px;" oninput="generateReport()">
             </div>
             <div style="display:flex; align-items:center; gap:6px;">
@@ -292,8 +306,17 @@
               <input type="text" id="etchingInput" value="에3.4" style="width:80px;" oninput="generateReport()">
             </div>
           </div>
+
+          <!-- 금일 전기동 PM 유형 동적 설정 영역 -->
+          <div style="display:flex; flex-direction:column; gap:6px; margin-top:4px;">
+            <div style="font-size:12px; font-weight:700; color:var(--text-secondary);">
+              ⚡ 금일 전기동 작업 유형 설정 (기본: 산세.박리 / 변경 시 즉시 반영)
+            </div>
+            <div id="todayElecConfigContainer" style="display:flex; flex-direction:column; gap:6px;"></div>
+          </div>
         </div>
 
+        <!-- 자동 추출된 PM 요약 -->
         <div class="card">
           <div class="card-header">
             <span>🔍 자동 추출된 PM 요약</span>
@@ -316,9 +339,14 @@
               <div class="pm-group-title">전기동</div>
               <div class="pm-pill-list" id="listElectro"></div>
             </div>
+            <div class="pm-group" id="ongoingGroupWrapper" style="display:none; background:#fff7ed; border-color:#fed7aa;">
+              <div class="pm-group-title" style="color:#c2410c;">현재 진행 중인 PM (보고서 맨 하단 배치)</div>
+              <div class="pm-pill-list" id="listOngoing"></div>
+            </div>
           </div>
         </div>
 
+        <!-- 특이사항 추가 -->
         <div class="card">
           <div class="card-header">
             <span>✏️ 금일 특이사항 빠른 추가</span>
@@ -346,17 +374,18 @@
             <button class="btn" onclick="addTodayNote()">추가</button>
           </div>
           <div style="display:flex; gap:5px; flex-wrap:wrap;">
+            <button class="btn btn-sub btn-sm" onclick="setQuickText('인써트 교체')">⚡ + 인써트 교체 (04시)</button>
+            <button class="btn btn-sub btn-sm" onclick="setQuickText('초음파점검')">⚡ + 초음파점검 (04시)</button>
             <button class="btn btn-sub btn-sm" onclick="setQuickText('스웰러 건욕')">+ 스웰러 건욕</button>
             <button class="btn btn-sub btn-sm" onclick="setQuickText('망간 건욕')">+ 망간 건욕</button>
-            <button class="btn btn-sub btn-sm" onclick="setQuickText('전체건욕')">+ 전체건욕</button>
             <button class="btn btn-sub btn-sm" onclick="setQuickText('설비작업(17시)')">+ 설비작업(17시)</button>
-            <button class="btn btn-sub btn-sm" onclick="setQuickText('유산동필터')">+ 유산동필터</button>
-            <button class="btn btn-sub btn-sm" onclick="setQuickText('인써트 교체')">+ 인써트 교체</button>
+            <button class="btn btn-sub btn-sm" onclick="setQuickText('0시PM중')">+ 0시PM중</button>
           </div>
           <div id="todayNotesList" style="display:flex; flex-wrap:wrap; gap:4px; margin-top:2px;"></div>
         </div>
       </div>
 
+      <!-- 우측: 최종 보고서 텍스트 -->
       <div class="card" style="height:fit-content;">
         <div class="card-header">
           <span>📋 최종 PM 보고문</span>
@@ -452,12 +481,12 @@
     </div>
   </div>
 
-  <!-- [탭 3] 화학동 및 펄스 주기 설정 (연도 제거, 분단위 0/30분 고정) -->
+  <!-- [탭 3] 주기 설정 (연도 제거, 0분/30분 단위) -->
   <div id="tabCycle" class="tab-pane">
     <div style="display:grid; grid-template-columns:1fr; gap:14px;">
       <div class="card">
         <div class="card-header">
-          <span>🧪 화학동 주기 설정 (년도 고정 / 0분·30분 단위)</span>
+          <span>🧪 화학동 주기 설정 (년도 고정 / 00분·30분 단위)</span>
           <button class="btn btn-sm" onclick="saveCycles()">설정 저장 및 동기화</button>
         </div>
         <div class="table-responsive">
@@ -514,7 +543,7 @@ const firebaseConfig = {
 let db = null;
 let isFirebaseConnected = false;
 
-// 1번 요청: 이미지 기준 최신 화학동 데이터 정합
+// 1번 요청 이미지 데이터 정합
 const DEFAULT_CHEM = [
   { id: '화7', lastDone: '2026-09-25T16:00', status: '완료', note: '0시PM중' },
   { id: '화8', lastDone: '2026-09-23T18:30', status: '완료', note: '' },
@@ -536,9 +565,26 @@ const ANCHOR_BIWEEK = {
   wash1: new Date('2026-09-28T00:00:00')
 };
 
-let chemList = JSON.parse(localStorage.getItem('chem_data_v27')) || DEFAULT_CHEM;
-let pulseList = JSON.parse(localStorage.getItem('pulse_data_v27')) || DEFAULT_PULSE;
-let manualNotes = JSON.parse(localStorage.getItem('manual_notes_v27')) || [];
+// 기본 전기동 유형 프리셋 (금요일 전13, 전21은 탈지 산세 박리건욕, 나머지는 산세.박리 기본)
+const DEFAULT_ELEC_PRESETS = {
+  '전기동 9': { type: '탈지 산세 박리건욕', pass: '7시패스' },
+  '전기동 16': { type: '유산동', pass: '7시패스' },
+  '전기동 18': { type: '산세.박리', pass: '7시패스' },
+  '전기동 22': { type: '산세.박리', pass: '7시패스' },
+  '전기동 15': { type: '산세.박리', pass: '7시패스' },
+  '전기동 20': { type: '산세.박리', pass: '7시패스' },
+  '전기동 11': { type: '산세.박리', pass: '7시패스' },
+  '전기동 14': { type: '유산동', pass: '7시패스' },
+  '전기동 17': { type: '유산동', pass: '7시패스' },
+  '전기동 12': { type: '유산동', pass: '7시패스' },
+  '전기동 13': { type: '탈지 산세 박리건욕', pass: '7시패스' },
+  '전기동 21': { type: '탈지 산세 박리건욕', pass: '7시30분패스' }
+};
+
+let chemList = JSON.parse(localStorage.getItem('chem_data_v28')) || DEFAULT_CHEM;
+let pulseList = JSON.parse(localStorage.getItem('pulse_data_v28')) || DEFAULT_PULSE;
+let manualNotes = JSON.parse(localStorage.getItem('manual_notes_v28')) || [];
+let elecCustomTypes = JSON.parse(localStorage.getItem('elec_custom_types_v28')) || {};
 
 let currentDate = new Date('2026-09-25T00:00:00');
 
@@ -581,12 +627,13 @@ function initFirebase() {
           : `<span style="color:var(--warning);">🟡 로컬 모드</span>`;
       });
 
-      db.ref('pm_system_data_v27').on('value', snap => {
+      db.ref('pm_system_data_v28').on('value', snap => {
         const val = snap.val();
         if (val) {
           if (val.chemList) chemList = val.chemList;
           if (val.pulseList) pulseList = val.pulseList;
           if (val.manualNotes) manualNotes = val.manualNotes;
+          if (val.elecCustomTypes) elecCustomTypes = val.elecCustomTypes;
           renderAll();
         }
       });
@@ -597,13 +644,14 @@ function initFirebase() {
 }
 
 function syncToStorage() {
-  localStorage.setItem('chem_data_v27', JSON.stringify(chemList));
-  localStorage.setItem('pulse_data_v27', JSON.stringify(pulseList));
-  localStorage.setItem('manual_notes_v27', JSON.stringify(manualNotes));
+  localStorage.setItem('chem_data_v28', JSON.stringify(chemList));
+  localStorage.setItem('pulse_data_v28', JSON.stringify(pulseList));
+  localStorage.setItem('manual_notes_v28', JSON.stringify(manualNotes));
+  localStorage.setItem('elec_custom_types_v28', JSON.stringify(elecCustomTypes));
 
   if (db && isFirebaseConnected) {
-    db.ref('pm_system_data_v27').set({
-      chemList, pulseList, manualNotes,
+    db.ref('pm_system_data_v28').set({
+      chemList, pulseList, manualNotes, elecCustomTypes,
       lastUpdated: new Date().toISOString()
     }).catch(err => console.error("Firebase Sync Error", err));
   }
@@ -662,7 +710,21 @@ function updateDateHeader() {
   document.getElementById('dayOfWeekBadge').innerText = `${dow}요일 PM`;
 }
 
-// [브리핑 추출 및 리포트 렌더링]
+// 당일 전기동 라인 목록 추출
+function getScheduledElecLines(day, dateObj) {
+  let lines = [];
+  if (day === 1) lines = ['전기동 9', '전기동 16'];
+  else if (day === 2) lines = ['전기동 18', '전기동 22'];
+  else if (day === 3) lines = ['전기동 15', '전기동 20'];
+  else if (day === 4) lines = ['전기동 11', '전기동 14', '전기동 17'];
+  else if (day === 5) {
+    if (checkBiWeek(ANCHOR_BIWEEK.elec12, dateObj)) lines.push('전기동 12');
+    lines.push('전기동 13', '전기동 21');
+  }
+  return lines;
+}
+
+// [메인 리포트 렌더링]
 function renderReportTab() {
   const day = currentDate.getDay();
   const curDateStr = formatDateOnly(currentDate);
@@ -708,7 +770,63 @@ function renderReportTab() {
     `;
   });
 
+  renderElecConfigUI(day);
   renderTodayPills(day, curDateStr);
+  generateReport();
+}
+
+// 3번 요청: 전기동 유형 선택 UI
+function renderElecConfigUI(day) {
+  const container = document.getElementById('todayElecConfigContainer');
+  container.innerHTML = '';
+
+  const curDateStr = formatDateOnly(currentDate);
+  const lines = getScheduledElecLines(day, currentDate);
+
+  if (lines.length === 0) {
+    container.innerHTML = `<span style="font-size:12px; color:var(--text-secondary);">금일 예정된 전기동 PM 라인이 없습니다.</span>`;
+    return;
+  }
+
+  const defaultPass = document.getElementById('passTimeInput').value.trim() || '7시패스';
+
+  lines.forEach(lineName => {
+    const key = `${curDateStr}_${lineName}`;
+    const preset = DEFAULT_ELEC_PRESETS[lineName] || { type: '산세.박리', pass: defaultPass };
+    const saved = elecCustomTypes[key] || preset;
+
+    const optList = ['산세.박리', '탈지 산세 박리건욕', '산탈지', '프리딥', '유산동필터', '유산동'];
+    let optsHtml = '';
+    optList.forEach(opt => {
+      optsHtml += `<option value="${opt}" ${saved.type === opt ? 'selected' : ''}>${opt}${opt === '산세.박리' ? ' (기본)' : ''}</option>`;
+    });
+
+    container.innerHTML += `
+      <div class="elec-type-row">
+        <strong>${lineName}</strong>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <select onchange="updateElecCustomType('${lineName}', 'type', this.value)" style="padding:4px 6px;">
+            ${optsHtml}
+          </select>
+          <input type="text" value="${saved.pass || defaultPass}" style="width:90px; padding:4px 6px;" 
+                 onchange="updateElecCustomType('${lineName}', 'pass', this.value)" placeholder="패스 시간">
+        </div>
+      </div>
+    `;
+  });
+}
+
+function updateElecCustomType(lineName, field, value) {
+  const curDateStr = formatDateOnly(currentDate);
+  const key = `${curDateStr}_${lineName}`;
+  const defaultPass = document.getElementById('passTimeInput').value.trim() || '7시패스';
+  const preset = DEFAULT_ELEC_PRESETS[lineName] || { type: '산세.박리', pass: defaultPass };
+
+  if (!elecCustomTypes[key]) {
+    elecCustomTypes[key] = { ...preset };
+  }
+  elecCustomTypes[key][field] = value;
+  syncToStorage();
   generateReport();
 }
 
@@ -717,11 +835,14 @@ function renderTodayPills(day, curDateStr) {
   const desmearList = document.getElementById('listDesmear');
   const chemListEl = document.getElementById('listChem');
   const electroList = document.getElementById('listElectro');
+  const ongoingList = document.getElementById('listOngoing');
+  const ongoingWrapper = document.getElementById('ongoingGroupWrapper');
 
   debarrList.innerHTML = '';
   desmearList.innerHTML = '';
   chemListEl.innerHTML = '';
   electroList.innerHTML = '';
+  ongoingList.innerHTML = '';
 
   const etchingVal = document.getElementById('etchingInput').value.trim();
   if (etchingVal) debarrList.innerHTML += `<span class="pm-pill highlight">${etchingVal}</span>`;
@@ -732,76 +853,89 @@ function renderTodayPills(day, curDateStr) {
   if (day === 3) debarrList.innerHTML += `<span class="pm-pill">데버링 3</span>`;
   if (day === 5) debarrList.innerHTML += `<span class="pm-pill">데버링 2</span>`;
 
+  // 디스미어 (1번 반영: 인써트/초음파 4시 감지)
+  const getNote = (lineKey) => {
+    const found = manualNotes.filter(n => n.date === curDateStr && n.line.includes(lineKey));
+    return found.length > 0 ? found.map(f => f.text).join(' ') : '';
+  };
+
+  const renderDesmearPill = (shortName, fullName) => {
+    const note = getNote(fullName);
+    if (note.includes('인써트')) return `<span class="pm-pill highlight">${shortName} 04시 PM (인써트 교체)</span>`;
+    if (note.includes('초음파')) return `<span class="pm-pill highlight">${shortName} 04시 PM (초음파점검)</span>`;
+    return `<span class="pm-pill">${shortName} 기본PM${note ? ' (' + note + ')' : ''}</span>`;
+  };
+
   if (day === 1) {
-    desmearList.innerHTML += `<span class="pm-pill">디스미어 8</span>`;
+    desmearList.innerHTML += renderDesmearPill('디8', '디스미어 8');
     if (checkBiWeek(ANCHOR_BIWEEK.des11, currentDate)) {
-      desmearList.innerHTML += `<span class="pm-pill">디스미어 11 <span class="badge badge-green">격주</span></span>`;
-      desmearList.innerHTML += `<span class="pm-pill">디스미어 15 <span class="badge badge-green">격주</span></span>`;
+      desmearList.innerHTML += renderDesmearPill('디11', '디스미어 11');
+      desmearList.innerHTML += renderDesmearPill('디15', '디스미어 15');
     }
     desmearList.innerHTML += `<span class="pm-pill highlight">화12 정기PM</span>`;
   } else if (day === 2) {
-    desmearList.innerHTML += `<span class="pm-pill">디스미어 9</span><span class="pm-pill">디스미어 6</span>`;
+    desmearList.innerHTML += renderDesmearPill('디9', '디스미어 9');
+    desmearList.innerHTML += renderDesmearPill('디6', '디스미어 6');
   } else if (day === 3) {
-    desmearList.innerHTML += `<span class="pm-pill">디스미어 12</span><span class="pm-pill highlight">화11 정기PM</span>`;
+    desmearList.innerHTML += renderDesmearPill('디12', '디스미어 12');
+    desmearList.innerHTML += `<span class="pm-pill highlight">화11 정기PM</span>`;
   } else if (day === 4) {
-    desmearList.innerHTML += `<span class="pm-pill">디스미어 7</span>`;
+    desmearList.innerHTML += renderDesmearPill('디7', '디스미어 7');
   } else if (day === 5) {
-    desmearList.innerHTML += `<span class="pm-pill">디스미어 10</span><span class="pm-pill highlight">화10 정기PM</span>`;
+    desmearList.innerHTML += renderDesmearPill('디10', '디스미어 10');
+    desmearList.innerHTML += `<span class="pm-pill highlight">화10 정기PM</span>`;
   }
 
-  if (day === 1) {
-    electroList.innerHTML += `<span class="pm-pill highlight">전기동 9 (펄스)</span><span class="pm-pill">전기동 16</span>`;
-  } else if (day === 2) {
-    electroList.innerHTML += `<span class="pm-pill">전기동 18</span><span class="pm-pill">전기동 22</span>`;
-  } else if (day === 3) {
-    electroList.innerHTML += `<span class="pm-pill">전기동 15</span><span class="pm-pill highlight">전기동 20 (펄스)</span>`;
-  } else if (day === 4) {
-    electroList.innerHTML += `<span class="pm-pill">전기동 11</span><span class="pm-pill">전기동 14</span><span class="pm-pill">전기동 17</span>`;
-  } else if (day === 5) {
-    if (checkBiWeek(ANCHOR_BIWEEK.elec12, currentDate)) electroList.innerHTML += `<span class="pm-pill">전기동 12 <span class="badge badge-green">격주</span></span>`;
-    electroList.innerHTML += `<span class="pm-pill">전기동 13</span><span class="pm-pill highlight">전기동 21 (펄스)</span>`;
-  }
+  // 전기동
+  const elecLines = getScheduledElecLines(day, currentDate);
+  elecLines.forEach(lName => {
+    const key = `${curDateStr}_${lName}`;
+    const preset = DEFAULT_ELEC_PRESETS[lName] || { type: '산세.박리', pass: '7시패스' };
+    const saved = elecCustomTypes[key] || preset;
+    const short = lName.replace('전기동 ', '전');
+    electroList.innerHTML += `<span class="pm-pill highlight">${short} ${saved.type} (${saved.pass})</span>`;
+  });
 
-  // 3 & 4번 수정: 당일 00:00 ~ 익일 08:30 기준 화학동 필터링
+  // 화학동 & 진행 중 PM
   const winStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), 0, 0, 0);
   const winEnd = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + 1, 8, 30, 0);
 
-  let matchedChems = [];
+  let ongoingCount = 0;
+
   chemList.forEach(c => {
     const actDate = new Date(c.lastDone);
     const nextDue = new Date(actDate.getTime() + 72 * 3600000);
+    const manualNote = getNote(c.id);
 
-    // 조건 1: 당일 시작/진행 중이거나 작업일자가 당일인 경우 (화13 누락 방지)
-    if (formatDateOnly(actDate) === curDateStr) {
+    // 2번 반영: PM중 감지 -> 하단 배치
+    if (c.note && (c.note.includes('PM중') || c.note.includes('진행중'))) {
+      ongoingList.innerHTML += `<span class="pm-pill highlight" style="color:#c2410c;">-${c.id} ${c.note}</span>`;
+      ongoingCount++;
+    } else if (formatDateOnly(actDate) === curDateStr) {
       const timeStr = c.note || formatTimeKr(actDate.getHours(), actDate.getMinutes()) + ' PM';
-      matchedChems.push(`${c.id} (${timeStr})`);
-    }
-    // 조건 2: 72시간 주기 도래가 당일 00:00 ~ 익일 08:30 사이인 경우
-    else if (nextDue >= winStart && nextDue <= winEnd) {
+      chemListEl.innerHTML += `<span class="pm-pill highlight">${c.id} (${timeStr})</span>`;
+    } else if (nextDue >= winStart && nextDue <= winEnd) {
       const isNextDay = (nextDue.getDate() !== currentDate.getDate());
       const prefix = isNextDay ? `익일(${nextDue.getDate()}일) ` : '';
-      matchedChems.push(`${c.id} (${prefix}${formatTimeKr(nextDue.getHours(), nextDue.getMinutes())})`);
+      chemListEl.innerHTML += `<span class="pm-pill highlight">${c.id} (${prefix}${formatTimeKr(nextDue.getHours(), nextDue.getMinutes())})</span>`;
     }
   });
 
-  if (matchedChems.length > 0) {
-    matchedChems.forEach(txt => chemListEl.innerHTML += `<span class="pm-pill highlight">${txt}</span>`);
-  } else {
-    chemListEl.innerHTML = `<span style="font-size:12px; color:var(--text-secondary);">-</span>`;
-  }
+  ongoingWrapper.style.display = (ongoingCount > 0) ? 'block' : 'none';
 }
 
+// 최종 보고서 텍스트 생성
 function generateReport() {
   const m = currentDate.getMonth() + 1;
   const d = currentDate.getDate();
   const day = currentDate.getDay();
   const curDateStr = formatDateOnly(currentDate);
-  const pass = document.getElementById('passTimeInput').value.trim() || '7시패스';
+  const defaultPass = document.getElementById('passTimeInput').value.trim() || '7시패스';
   const etching = document.getElementById('etchingInput').value.trim();
 
   const getNote = (lineKey) => {
     const found = manualNotes.filter(n => n.date === curDateStr && n.line.includes(lineKey));
-    return found.length > 0 ? ` ${found.map(f => f.text).join(' ')}` : '';
+    return found.length > 0 ? found.map(f => f.text).join(' ') : '';
   };
 
   let debarr = '';
@@ -810,41 +944,56 @@ function generateReport() {
   let blackhole = '';
   let electro = [];
   let chems = [];
+  let ongoing = [];
 
+  // 데버링 / 고압수세
   if (day === 1 && checkBiWeek(ANCHOR_BIWEEK.wash1, currentDate)) {
     wash = '고압수세 1라인';
   }
+  if (day === 3) debarr = '데3';
+  if (day === 5) debarr = '데2';
+
+  // 1번 반영: 디스미어 04시 변수 처리 함수
+  const formatDesmearLine = (shortName, fullName) => {
+    const note = getNote(fullName);
+    if (note.includes('인써트')) return `${shortName} 04시 PM (인써트 교체)`;
+    if (note.includes('초음파')) return `${shortName} 04시 PM (초음파점검)`;
+    if (note.includes('04시') || note.includes('새벽')) return `${shortName} 04시 PM (${note})`;
+    return `${shortName} 기본PM${note ? ' ' + note : ''}`;
+  };
 
   if (day === 1) {
-    desmear.push(`디8 기본PM${getNote('디스미어 8')}`);
+    desmear.push(formatDesmearLine('디8', '디스미어 8'));
     if (checkBiWeek(ANCHOR_BIWEEK.des11, currentDate)) {
-      desmear.push(`디11 기본PM${getNote('디스미어 11')}`);
-      desmear.push(`디15 기본PM${getNote('디스미어 15')}`);
+      desmear.push(formatDesmearLine('디11', '디스미어 11'));
+      desmear.push(formatDesmearLine('디15', '디스미어 15'));
     }
-    blackhole = `화12 정기PM${getNote('화12')}`;
-    electro.push(`전9 탈지 산세 박리건욕 (${pass})${getNote('전기동 9')}`);
-    electro.push(`전16 유산동 (${pass})${getNote('전기동 16')}`);
+    blackhole = `화12 정기PM${getNote('화12') ? ' ' + getNote('화12') : ''}`;
   } else if (day === 2) {
-    desmear.push(`디9 기본PM${getNote('디스미어 9')}`, `디6 기본PM${getNote('디스미어 6')}`);
-    electro.push(`전18 기본PM (${pass})${getNote('전기동 18')}`, `전22 기본PM (${pass})${getNote('전기동 22')}`);
+    desmear.push(formatDesmearLine('디9', '디스미어 9'), formatDesmearLine('디6', '디스미어 6'));
   } else if (day === 3) {
-    debarr = '데3';
-    desmear.push(`디12 기본PM${getNote('디스미어 12')}`);
-    blackhole = `화11 정기PM${getNote('화11')}`;
-    electro.push(`전15 기본PM (${pass})${getNote('전기동 15')}`, `전20 기본PM (${pass})${getNote('전기동 20')}`);
+    desmear.push(formatDesmearLine('디12', '디스미어 12'));
+    blackhole = `화11 정기PM${getNote('화11') ? ' ' + getNote('화11') : ''}`;
   } else if (day === 4) {
-    desmear.push(`디7 기본PM${getNote('디스미어 7')}`);
-    electro.push(`전11 기본PM (${pass})${getNote('전기동 11')}`, `전14 유산동 (${pass})${getNote('전기동 14')}`, `전17 유산동 (${pass})${getNote('전기동 17')}`);
+    desmear.push(formatDesmearLine('디7', '디스미어 7'));
   } else if (day === 5) {
-    debarr = '데2';
-    desmear.push(`디10 기본PM${getNote('디스미어 10')}`);
-    blackhole = `화10 정기PM${getNote('화10')}`;
-    if (checkBiWeek(ANCHOR_BIWEEK.elec12, currentDate)) electro.push(`전12 유산동 (${pass})${getNote('전기동 12')}`);
-    electro.push(`전13 탈지 산세 박리건욕 (${pass})${getNote('전기동 13')}`);
-    electro.push(`전21 탈지 산세 박리건욕 (7시 30분패스)${getNote('전기동 21')}`);
+    desmear.push(formatDesmearLine('디10', '디스미어 10'));
+    blackhole = `화10 정기PM${getNote('화10') ? ' ' + getNote('화10') : ''}`;
   }
 
-  // 3 & 4번 핵심 로직: 25일 당일 PM + 26일 08:30 이전 건만 엄격 포함
+  // 3번 반영: 전기동 라인 커스텀 유형 적용
+  const elecLines = getScheduledElecLines(day, currentDate);
+  elecLines.forEach(lName => {
+    const key = `${curDateStr}_${lName}`;
+    const preset = DEFAULT_ELEC_PRESETS[lName] || { type: '산세.박리', pass: defaultPass };
+    const saved = elecCustomTypes[key] || preset;
+    const short = lName.replace('전기동 ', '전');
+    const note = getNote(lName);
+    const notePart = note ? ` ${note}` : '';
+    electro.push(`${short} ${saved.type} (${saved.pass})${notePart}`);
+  });
+
+  // 화학동 & 2번 반영: PM중 하단 배치 로직
   const winStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), 0, 0, 0);
   const winEnd = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + 1, 8, 30, 0);
 
@@ -853,26 +1002,27 @@ function generateReport() {
     const nextDue = new Date(actDate.getTime() + 72 * 3600000);
     const manualNote = getNote(c.id);
 
-    // 1) 당일 작업/예정된 건 (예: 화13)
-    if (formatDateOnly(actDate) === curDateStr) {
+    // PM중 감지 시 맨 아래 배열로 분기
+    if (c.note && (c.note.includes('PM중') || c.note.includes('진행중'))) {
+      ongoing.push(`-${c.id} ${c.note}`);
+    } else if (formatDateOnly(actDate) === curDateStr) {
       let desc = c.note || '기본PM';
-      if (manualNote) desc += manualNote;
-      chems.push(`${c.id} ${desc}`);
-    }
-    // 2) 72시간 주기 도래가 당일 00:00 ~ 익일 08:30 사이인 경우
-    else if (nextDue >= winStart && nextDue <= winEnd) {
+      if (manualNote) desc += ' ' + manualNote;
+      // '13시 촉매건욕' 등 앞에 '25일 ' 붙여줌
+      const prefix = desc.includes(`${d}일`) ? '' : `${d}일 `;
+      chems.push(`${c.id} ${prefix}${desc}`);
+    } else if (nextDue >= winStart && nextDue <= winEnd) {
       const isNextDay = (nextDue.getDate() !== currentDate.getDate());
       const prefix = isNextDay ? `익일(${nextDue.getDate()}일) ` : '';
       const timeKr = formatTimeKr(nextDue.getHours(), nextDue.getMinutes());
-      const noteText = manualNote || (c.note ? ` ${c.note}` : ' 기본PM');
+      const noteText = manualNote ? ` ${manualNote}` : (c.note ? ` ${c.note}` : ' 기본PM');
       chems.push(`${c.id} ${prefix}${timeKr}${noteText}`);
-    }
-    // 3) 수동 특이사항만 등록된 경우
-    else if (manualNote) {
+    } else if (manualNote) {
       chems.push(`${c.id} ${manualNote}`);
     }
   });
 
+  // 전체 브리핑 조립 (빈 줄 규격 준수)
   let out = `동도금 ${m}월 ${d}일 PM일정\n\n`;
   if (debarr) out += `${debarr}\n\n`;
   if (wash) out += `${wash}\n\n`;
@@ -885,7 +1035,15 @@ function generateReport() {
     out += `\n`;
   }
 
-  if (electro.length > 0) out += `${electro.join('\n')}\n\n`;
+  if (electro.length > 0) {
+    out += `${electro.join('\n')}\n\n`;
+  }
+
+  // 2번 반영: PM중인 라인을 이상입니다 바로 위(맨 하단)에 배치
+  if (ongoing.length > 0) {
+    out += `${ongoing.join('\n')}\n\n`;
+  }
+
   out += `이상입니다.`;
 
   document.getElementById('reportOutput').value = out;
@@ -969,7 +1127,7 @@ function setTag(id, isThisWeek) {
   el.className = isThisWeek ? 'badge badge-green' : 'badge badge-sub';
 }
 
-// [2번 수정: 년도 제거 & 0/30분 단위 셀렉터 적용]
+// [주기 설정 탭]
 function renderCycleSettings() {
   const chemBody = document.getElementById('chemSettingTableBody');
   chemBody.innerHTML = '';
