@@ -167,6 +167,53 @@ nav .emoji { font-family: -apple-system,BlinkMacSystemFont,sans-serif; font-size
   .btn.secondary, .close { background: #39393e; color: #b9d9ff; }
   .modal-stats div { background: #2c2c2e; }
 }
+
+/* iPhone calendar: fit four to six week rows between the header and tab bar. */
+@media (max-width: 699px) {
+  body { padding-top: calc(54px + env(safe-area-inset-top)); padding-bottom: calc(60px + env(safe-area-inset-bottom)); }
+  header .head { height: 54px; }
+  header .chip, header .group { min-height: 34px; }
+  main { padding: 5px 6px 0; }
+  #calendar-view.active {
+    display: flex;
+    flex-direction: column;
+    height: calc(100dvh - 54px - 60px - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 5px);
+    min-height: 0;
+  }
+  #calendar-view .toolbar { flex: none; margin-bottom: 5px; }
+  #calendar-view .icon-btn, #calendar-view .month-btn, #calendar-view .tool-btn { min-height: 38px; }
+  #calendar-view .calendar { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  #calendar-view .weekdays { flex: none; padding: 4px 0; line-height: 18px; }
+  #calendar-view .grid {
+    flex: 1;
+    min-height: 0;
+    grid-template-rows: repeat(var(--calendar-rows, 6), minmax(0, 1fr));
+  }
+  #calendar-view .day { min-height: 0; overflow: hidden; padding: 2px 1px 1px; gap: 1px; justify-content: flex-start; }
+  #calendar-view .number { width: 20px; height: 19px; line-height: 19px; font-size: 11px; flex: none; }
+  #calendar-view .holiday { min-height: 10px; padding: 0 1px; font-size: 8px; }
+  #calendar-view .badge { padding: 1px 0; font-size: 10px; line-height: 1.2; flex: none; }
+  #calendar-view .tag { font-size: 8px; line-height: 1.1; }
+  #calendar-view .memo { padding: 1px 0; font-size: clamp(7px, 2vw, 9px); line-height: 1.1; }
+  #calendar-view .calendar-note {
+    flex: none;
+    margin: 4px 2px 2px;
+    font-size: 10px;
+    line-height: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  nav { padding-top: 3px; padding-bottom: calc(3px + env(safe-area-inset-bottom)); }
+  nav button { min-height: 51px; }
+}
+@media (max-width: 699px) and (max-height: 680px) {
+  #calendar-view .calendar-note { display: none; }
+  #calendar-view .weekdays { padding: 2px 0; }
+  #calendar-view .day { padding-top: 1px; }
+  #calendar-view .number { height: 17px; line-height: 17px; }
+  #calendar-view .badge { padding: 0; }
+}
 </style>
 </head>
 <body>
@@ -390,6 +437,7 @@ function drawCalendar(){
  for(let n=first;n>0;n--)grid.append(cell(new Date(y,m,1-n),true));
  for(let d=1;d<=last;d++)grid.append(cell(new Date(y,m,d),false));
  const trailing=(7-(first+last)%7)%7;for(let d=1;d<=trailing;d++)grid.append(cell(new Date(y,m+1,d),true));
+ grid.style.setProperty('--calendar-rows',Math.ceil((first+last+trailing)/7));
 }
 function drawLeave(){const c=state.config,year=state.cal.getFullYear(),used=usedLeave(year),total=c.hireDate&&c.totalLeaveYear!==year?leaveAllowance(c.hireDate,year).days:clamp0(c.totalLeave),remain=Math.max(0,total-used);$('leave-total').textContent=`${total}일`;$('leave-used').textContent=`${used}일`;$('leave-remain').textContent=`${remain}일`;$('quick-remain').textContent=remain;$('leave-pay').textContent=money(remain*8*clamp0(c.ordinaryHourly));$('leave-info').textContent=leaveAllowance(c.hireDate,year).description}
 function writeSettings(){const c=state.config;for(const [id,key] of Object.entries({'base-hourly':'baseHourly','ordinary-hourly':'ordinaryHourly','base-hours':'baseHours','duty-pay':'dutyPay','seniority-pay':'seniorityPay','total-leave':'totalLeave'}))$(id).value=c[key];$('total-leave').value=c.hireDate&&c.totalLeaveYear!==state.cal.getFullYear()?leaveAllowance(c.hireDate,state.cal.getFullYear()).days:c.totalLeave;$('hire-date').value=c.hireDate;$('pay-hire-date').value=c.hireDate;$('retro-check').checked=!!c.applyRetroPay}
@@ -431,7 +479,7 @@ function updateHire(value){state.config.hireDate=value;$('hire-date').value=valu
 function init(){loadOverrides();$('group').value=state.group;writeSettings();renderAll();
  for(const [id,which,delta] of [['cal-prev','calendar',-1],['cal-next','calendar',1],['pay-prev','payroll',-1],['pay-next','payroll',1]])$(id).onclick=()=>moveMonth(which,delta);
  $('cal-month').onclick=()=>openPicker('calendar');$('pay-month').onclick=()=>openPicker('payroll');$('cal-stats').onclick=showStats;
- $('quick-today').onclick=()=>{const now=new Date();state.cal=new Date(now.getFullYear(),now.getMonth(),1);state.pay=new Date(state.cal);switchView('calendar');renderAll();setTimeout(()=>$('calendar-grid').querySelector('.today')?.scrollIntoView({block:'center',behavior:'smooth'}),60)};
+ $('quick-today').onclick=()=>{const now=new Date();state.cal=new Date(now.getFullYear(),now.getMonth(),1);state.pay=new Date(state.cal);switchView('calendar');renderAll();setTimeout(()=>$('calendar-grid').querySelector('.today')?.scrollIntoView({block:'nearest',behavior:'smooth'}),60)};
  $('cal-today').onclick=$('quick-today').onclick;$('pay-today').onclick=()=>{state.pay=new Date(new Date().getFullYear(),new Date().getMonth(),1);state.cal=new Date(state.pay);renderAll()};$('quick-leave').onclick=()=>switchView('leave');
  $('group').onchange=e=>{state.group=e.target.value;localStorage.setItem('shift_active_group',state.group);loadOverrides();renderAll()};
  document.querySelectorAll('nav [data-view]').forEach(b=>b.onclick=()=>switchView(b.dataset.view));
