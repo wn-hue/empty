@@ -2,13 +2,13 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#f6f9fa">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#f2f2f7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="교대근무">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%231967d2'/%3E%3Ctext x='50' y='66' text-anchor='middle' fill='white' font-size='42' font-weight='bold'%3E교대%3C/text%3E%3C/svg%3E">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%231967d2'/%3E%3Ctext x='50' y='66' text-anchor='middle' fill='white' font-size='42' font-weight='bold'%3E교대%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23007aff'/%3E%3Ctext x='50' y='66' text-anchor='middle' fill='white' font-size='42' font-weight='bold'%3E교대%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23007aff'/%3E%3Ctext x='50' y='66' text-anchor='middle' fill='white' font-size='42' font-weight='bold'%3E교대%3C/text%3E%3C/svg%3E">
 <title>교대근무 · 캘린더 & 급여 계산기</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;color:#26343a;background:#f6f9fa;--blue:#1967d2;--teal:#067984;--line:#dfe6eb;--muted:#65757f;--day:#1764bc;--night:#7541a4;--off:#c93e41;--special:#a26309;--leave:#167342}
@@ -22,6 +22,151 @@ nav{position:fixed;z-index:11;bottom:0;left:0;right:0;background:#fff;border-top
 @media(max-width:360px){main{padding:7px 6px}.head h1{font-size:14px}.chip{font-size:10px;padding:4px 6px}.group{font-size:12px;padding:4px 2px}.logo{width:30px;height:30px}.month-btn{font-size:14px}.icon-btn{width:29px}.tool-btn{font-size:11px;padding:0 7px}.day{min-height:88px}.badge{font-size:10px}.holiday{font-size:8px}}
 @media(min-width:700px){.day{min-height:107px}.overlay{align-items:center}.sheet{border-radius:18px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+/* iOS native-inspired visual layer; calculations and stored values remain unchanged. */
+:root {
+  color-scheme: light;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Apple SD Gothic Neo", sans-serif;
+  background: #f2f2f7;
+  color: #1c1c1e;
+  --blue: #007aff;
+  --teal: #30b0c7;
+  --line: #e5e5ea;
+  --muted: #71717a;
+  --day: #0066cc;
+  --night: #7656b9;
+  --off: #cf434e;
+  --special: #a66212;
+  --leave: #24814c;
+}
+html, body { background: #f2f2f7; overscroll-behavior-x: none; touch-action: pan-x pan-y; }
+body { padding-top: calc(62px + env(safe-area-inset-top)); -webkit-text-size-adjust: 100%; }
+button, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+button { touch-action: manipulation; }
+button:active { opacity: .72; }
+header {
+  background: rgba(249,249,251,.86);
+  -webkit-backdrop-filter: saturate(180%) blur(22px);
+  backdrop-filter: saturate(180%) blur(22px);
+  box-shadow: none;
+  border-bottom: .5px solid rgba(60,60,67,.18);
+}
+header .head { height: 62px; gap: 7px; }
+.logo { background: linear-gradient(145deg,#4ab4ff,#007aff 65%,#0066d6); box-shadow: 0 2px 5px #007aff30; border-radius: 10px; }
+h1 { font-size: 17px; font-weight: 760; letter-spacing: -.6px; color: #111118; }
+.chip, .group { background: #e9e9ee; border: 0; color: #007aff; min-height: 38px; border-radius: 11px; padding: 5px 9px; }
+.chip.leave { background: #e7f6eb; color: #24814c; }
+.group { font-size: 13px; padding-right: 5px; }
+main { padding-top: 12px; padding-bottom: 30px; }
+.toolbar { margin-bottom: 12px; gap: 6px; }
+.month-nav { background: #fff; border: .5px solid var(--line); border-radius: 13px; box-shadow: 0 1px 3px #17172a08; }
+.icon-btn { color: #007aff; font-size: 14px; min-height: 44px; }
+.month-btn { color: #1c1c1e; font-weight: 760; min-height: 44px; }
+.tool-btn { background: #fff; border: .5px solid var(--line); color: #007aff; min-height: 44px; border-radius: 12px; font-weight: 700; box-shadow: 0 1px 3px #17172a08; }
+.calendar { border: .5px solid #e0e0e5; background: #fff; border-radius: 16px; box-shadow: 0 3px 13px #17172a0b; }
+.weekdays { color: #8e8e93; border-color: #ededf0; background: #fbfbfd; font-weight: 650; padding: 8px 0; }
+.day { background: #fff; border-color: #ededf0; min-height: 90px; color: #34343a; padding-top: 5px; }
+.day.other { background: #fafafd; color: #b3b3bc; }
+.day.today { background: #f3f8ff; box-shadow: inset 0 0 0 1.5px #007aff; }
+.day:active { background: #eaf3ff; }
+.number { font-size: 12px; }
+.today .number { background: #007aff; color: #fff; }
+.holiday { background: #dff4f6; color: #087c8a; font-weight: 700; }
+.badge { border-radius: 5px; padding: 3px 0; font-weight: 750; }
+.badge.day { color: #0066cc; background: #eaf3ff; }
+.badge.night { color: #69429d; background: #f2ebfa; }
+.badge.off { color: #c43b46; background: #fff0f1; }
+.badge.special { color: #9c590c; background: #fff1df; }
+.badge.leave, .badge.half { color: #1d7641; background: #e6f6eb; }
+.memo { color: #8b630c; background: #fff4db; }
+.calendar-note, .swipe-hint, .hint { color: #797984; }
+.hero { border-radius: 19px; background: linear-gradient(145deg,#182d52,#204b89 65%,#2375c4); padding: 20px; box-shadow: 0 5px 17px #16498425; }
+.period { background: #ffffff2c; border-radius: 9px; }
+.gross { color: #fff; font-size: clamp(28px, 8vw, 36px); letter-spacing: -.035em; }
+.hero-grid { border-top-color: #ffffff42; }
+.hero-grid strong { color: #fff; }
+.card { background: #fff; border: .5px solid #e5e5ea; border-radius: 17px; box-shadow: 0 1px 3px #17172a08; padding: 16px; margin-bottom: 14px; }
+.card-title { font-size: 16px; color: #1c1c1e; border-bottom-color: #eeeef1; font-weight: 760; }
+.link-button { color: #007aff; font-weight: 650; }
+label.field { color: #555560; font-size: 12px; }
+input[type=number], input[type=date], input[type=text], textarea {
+  border: 1px solid transparent; background: #f2f2f7; border-radius: 11px;
+  min-height: 46px; color: #1c1c1e; font-size: 16px; box-shadow: none;
+  -webkit-appearance: none; appearance: none;
+}
+textarea { line-height: 1.45; }
+input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid #007aff; outline-offset: 1px; }
+input[readonly] { background: #f6f6f8; color: #64646d; }
+input[type=checkbox] { accent-color: #007aff; }
+.check { border: 0; background: #f6f6f9; border-radius: 11px; min-height: 50px; padding: 11px; }
+.pay-table td { border-color: #f0f0f2; padding: 11px 1px; }
+.pay-table tr.total { background: #edf5ff; color: #006ad6; }
+.pill { background: #e9f2ff; color: #006ad6; border-radius: 7px; padding: 5px 7px; }
+.btn { background: #007aff; border-radius: 11px; min-height: 46px; }
+.btn.secondary { background: #e9e9ee; color: #007aff; }
+.btn.danger { background: #ffe9e9; color: #c22b37; }
+.info { background: #eaf6ee; border: 0; color: #296742; border-radius: 11px; }
+.stat { background: #f5f5f9; border: 0; border-radius: 11px; }
+.stat b { color: #1c1c1e; }
+nav { background: rgba(249,249,251,.9); border-top: .5px solid #d9d9df; -webkit-backdrop-filter: saturate(180%) blur(24px); backdrop-filter: saturate(180%) blur(24px); padding-top: 6px; }
+nav button { color: #888891; min-height: 54px; font-weight: 650; border-radius: 11px; }
+nav button[aria-current=page] { background: #e6f1ff; color: #007aff; }
+nav .emoji { font-family: -apple-system,BlinkMacSystemFont,sans-serif; font-size: 24px; line-height: 1; font-weight: 500; }
+.overlay { background: rgba(8,8,16,.45); }
+.sheet { background: #f8f8fa; border-radius: 22px 22px 0 0; padding-top: 12px; }
+.sheet::before { content: ''; display: block; width: 36px; height: 5px; border-radius: 9px; background: #c4c4ca; margin: 0 auto 13px; }
+.sheet-head { color: #1c1c1e; font-size: 17px; }
+.close { background: #e9e9ee; color: #777780; width: 34px; height: 34px; border-radius: 50%; font-weight: 700; }
+.sheet-label { color: #33333c; }
+.option-grid button, .months button { background: #fff; border: .5px solid #e5e5ea; border-radius: 12px; min-height: 61px; color: #303037; }
+.option-grid button.selected, .months button.selected { background: #e8f2ff; border: 1.5px solid #007aff; color: #0066d7; }
+.option-grid button small { color: #86868e; }
+.year-bar { background: #ededf1; }
+.year-bar button { color: #007aff; }
+.modal-stats div { background: #fff; }
+.modal-stats strong { color: #007aff; }
+.toast { background: rgba(43,43,50,.95); -webkit-backdrop-filter: blur(15px); backdrop-filter: blur(15px); }
+@media(max-width:375px) {
+  header .head { gap: 5px; }
+  .logo { display: none; }
+  h1 { font-size: 15px; }
+  .chip { padding: 5px 6px; font-size: 11px; }
+  .group { padding: 4px; font-size: 12px; }
+  main { padding-left: 7px; padding-right: 7px; }
+  .month-btn { font-size: 14px; }
+  .icon-btn { width: 30px; }
+  .tool-btn { padding: 0 7px; }
+  .day { min-height: 84px; }
+}
+@media(min-width:700px) { .sheet { border-radius: 22px; } .day { min-height: 105px; } }
+@media(prefers-color-scheme:dark) {
+  :root { color-scheme: dark; background: #000; color: #f5f5f7; --line: #35353a; --muted: #a0a0aa; }
+  html, body { background: #000; color: #f5f5f7; }
+  header, nav { background: rgba(29,29,32,.9); border-color: #39393e; }
+  h1, .month-btn, .card-title, .sheet-head, .sheet-label, .stat b { color: #f5f5f7; }
+  .chip, .group, .month-nav, .tool-btn, .calendar, .card, .day, .sheet, .option-grid button, .months button, .modal-stats div { background: #1c1c1e; border-color: #35353a; color: #f5f5f7; }
+  .chip, .group, .tool-btn, .icon-btn, .link-button { color: #68adff; }
+  .chip.leave { background: #173c27; color: #75cf96; }
+  .weekdays { background: #242428; border-color: #35353a; }
+  .day.other { background: #252529; color: #777781; }
+  .day.today { background: #142941; }
+  .day:active { background: #183958; }
+  .badge.day { background: #17314e; color: #8fc4ff; }
+  .badge.night { background: #36284a; color: #c5a9ed; }
+  .badge.off { background: #43272a; color: #ff9da4; }
+  .badge.special { background: #493520; color: #ffcf8e; }
+  .badge.leave, .badge.half { background: #1c4030; color: #a8e4bc; }
+  .holiday { background: #174044; color: #a8ecf2; }
+  .memo { background: #42371c; color: #f6d685; }
+  .card-title, .pay-table td { border-color: #35353a; }
+  label.field { color: #babac2; }
+  input[type=number], input[type=date], input[type=text], textarea, input[readonly], .check, .stat, .year-bar { background: #2c2c2e; color: #f5f5f7; border-color: transparent; }
+  .option-grid button.selected, .months button.selected, nav button[aria-current=page] { background: #173c63; color: #a6d3ff; }
+  .pay-table tr.total, .pill { background: #17314e; color: #a6d3ff; }
+  .info { background: #1d3929; color: #a8e4bc; }
+  .btn.secondary, .close { background: #39393e; color: #b9d9ff; }
+  .modal-stats div { background: #2c2c2e; }
+}
 </style>
 </head>
 <body>
@@ -48,7 +193,7 @@ nav{position:fixed;z-index:11;bottom:0;left:0;right:0;background:#fff;border-top
 <div class="card"><div class="card-title">급여 기준 단가 설정</div><div class="fields"><label class="field"><span>기준 기본시급 (원)</span><input id="base-hourly" type="number" min="0" inputmode="numeric"></label><label class="field"><span>통상임금 시급 (원)</span><input id="ordinary-hourly" type="number" min="0" inputmode="numeric"></label></div><div class="fields"><label class="field"><span>월 기준시간</span><input id="base-hours" type="number" min="1" inputmode="decimal"></label><label class="field"><span>직책수당 (원)</span><input id="duty-pay" type="number" min="0" inputmode="numeric"></label></div><div class="fields"><label class="field"><span>근속수당 (원)</span><input id="seniority-pay" type="number" min="0" inputmode="numeric"></label></div><div class="actions"><button class="btn" id="save-settings">설정 저장</button><button class="btn secondary" id="reset-settings">급여 설정 초기화</button></div><p class="hint">입력값은 이 기기의 브라우저에 저장됩니다. 초기화해도 날짜별 근태와 메모는 지워지지 않습니다.</p></div>
 </section>
 </main>
-<nav aria-label="화면 전환"><div class="items"><button data-view="calendar" aria-current="page"><span class="emoji">📅</span>교대 캘린더</button><button data-view="payroll"><span class="emoji">💰</span>급여 계산기</button><button data-view="leave"><span class="emoji">🏖️</span>연차 & 설정</button></div></nav>
+<nav aria-label="화면 전환"><div class="items"><button data-view="calendar" aria-current="page"><span class="emoji" aria-hidden="true">▦</span>교대 캘린더</button><button data-view="payroll"><span class="emoji" aria-hidden="true">₩</span>급여 계산기</button><button data-view="leave"><span class="emoji" aria-hidden="true">✳</span>연차 & 설정</button></div></nav>
 <div class="overlay" id="date-modal"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="date-title"><div class="sheet-head"><span id="date-title"></span><button class="close" data-close aria-label="닫기">✕</button></div><div class="hint" id="base-shift"></div><label class="sheet-label" for="memo-input">📝 일자별 메모</label><textarea id="memo-input" placeholder="예: 설비 정기점검"></textarea><button class="btn" id="save-memo" style="width:100%;margin-top:8px">💾 메모 저장 및 닫기</button><span class="sheet-label">근무 변경 옵션</span><div class="option-grid" id="option-grid"></div></div></div>
 <div class="overlay" id="picker-modal"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="picker-title"><div class="sheet-head"><span id="picker-title">연월 선택</span><button class="close" data-close aria-label="닫기">✕</button></div><div class="year-bar"><button id="picker-prev" aria-label="이전 연도">◀</button><strong id="picker-year"></strong><button id="picker-next" aria-label="다음 연도">▶</button></div><div class="months" id="picker-months"></div><button class="btn secondary" id="picker-today" style="width:100%">이번 달로 이동</button></div></div>
 <div class="overlay" id="stats-modal"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="stats-title"><div class="sheet-head"><span id="stats-title">근무 통계</span><button class="close" data-close aria-label="닫기">✕</button></div><div class="period" style="background:#eaf3ff;color:#1967d2" id="stats-period"></div><div class="modal-stats" id="stats-grid"></div><button class="btn" data-close style="width:100%">확인</button></div></div>
@@ -305,6 +450,7 @@ function init(){loadOverrides();$('group').value=state.group;writeSettings();ren
  $('preview-slip').onclick=()=>showSlip();$('slip-detail').onclick=()=>{closeModal();switchView('payroll')};
  installSwipe($('calendar-touch'),delta=>moveMonth('calendar',delta));installSwipe($('pay-hero'),delta=>moveMonth('payroll',delta));checkSlip();
 }
+for(const eventName of ['gesturestart','gesturechange','gestureend'])document.addEventListener(eventName,e=>e.preventDefault(),{passive:false});
 window.AppCore={baseShift,actualShift,aggregate,payrollCalc,leaveAllowance,payDates,dayKey,period,state};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 </script>
