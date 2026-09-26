@@ -834,89 +834,57 @@
             font-size: 20px;
             font-weight: 800;
         }
+    /* 스마트폰 홈 화면 사용성을 위한 간결한 레이아웃 보정 */
+@media (max-width: 640px) {
+    .container { padding: 6px 10px; }
+    .app-header { padding: 7px 9px; margin-bottom: 8px; }
+    .brand-title { font-size: 15px; }
+    .header-chip { min-height: 36px; padding: 5px 8px; }
+    .group-select { min-height: 36px; }
+    .gcal-topbar { padding-bottom: 8px; }
+    .nav-arrow-btn { width: 38px; height: 40px; }
+    .month-title-btn { min-height: 40px; }
+    .gcal-chip-btn { min-height: 38px; }
+    .calendar-card { margin-bottom: 10px; }
+    .cal-weekdays { padding: 7px 0 6px; }
+    .cal-day { min-height: 100px; padding: 4px 1px; }
+    .day-num { margin-bottom: 2px; }
+    .shift-badge { padding: 3px 1px; }
+    .holiday-bar { font-size: 9px; margin-bottom: 2px; }
+    .memo-tag { font-size: 9px; }
+    .card { padding: 14px; }
+    .card-header { flex-wrap: wrap; gap: 4px; }
+    .card-header > div { flex-wrap: wrap; }
+    .input-group label { white-space: normal; line-height: 1.25; min-height: 30px; }
+    .input-group input, .input-group select, .input-group textarea { font-size: 16px; min-height: 44px; }
+    .btn-save, .btn-reset-data { min-height: 44px; }
+    .toggle-box { min-height: 48px; }
+    .bottom-nav { padding-top: 5px; }
+    .nav-item { min-height: 49px; }
+    .modal-sheet { max-height: 90dvh; overscroll-behavior: contain; }
+    .modal-title { position: sticky; top: -20px; z-index: 2; background: #fff; padding: 4px 0 8px; }
+    .modal-title button { min-width: 40px; min-height: 40px; }
+    .opt-btn { min-height: 56px; }
+}
+@media (max-width: 360px) {
+    .container { padding: 5px 6px; }
+    .app-header { gap: 4px; }
+    .brand-box { gap: 4px; }
+    .brand-title { font-size: 14px; }
+    .header-chip { font-size: 10px; padding: 4px 6px; }
+    .group-select { font-size: 12px; padding-left: 6px; }
+    .month-title-btn { font-size: 14px; padding: 4px; }
+    .nav-arrow-btn { width: 32px; }
+    .gcal-chip-btn { font-size: 11px; padding: 5px 7px; }
+    .cal-day { min-height: 93px; }
+    .shift-badge { font-size: 10.5px; }
+}
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; scroll-behavior: auto !important; }
+}
     </style>
-<style>
-/* UI improvements: calculation and saved data logic are kept in the original script. */
-:root { --primary:#236b59; --primary-dark:#174c3f; --bg-main:#f3f6f5; --border:#dce5e1; --text-main:#202f2a; --text-sub:#5e7068; }
-body { line-height:1.5; }
-.container { max-width:760px; padding:18px 16px; }
-.app-header { padding:12px 0; background:transparent; border:0; box-shadow:none; flex-wrap:wrap; gap:12px; margin-bottom:18px; }
-.brand-logo { background:var(--primary); border-radius:10px; width:36px; height:36px; }
-.brand-title {font-size:19px;letter-spacing:-.7px;}
-.header-quick-chips { margin-left:auto; }
-.header-chip,.group-select { min-height:44px; border-radius:12px; }
-.group-select {font-size:16px;}
-.header-chip.today-chip {display:none;}
-.gcal-topbar { gap:8px; flex-wrap:wrap; margin-bottom:8px; }
-.month-title-nav { background:white; border-radius:14px; padding:2px; }
-.nav-arrow-btn,.month-title-btn,.gcal-chip-btn { min-height:44px; }
-.nav-arrow-btn {width:40px;}
-.month-title-btn {font-size:18px; padding:4px;}
-.gcal-chip-btn {padding:6px 10px;border-radius:12px;}
-.calendar-card {border-radius:18px;box-shadow:0 8px 24px #183b2b06;}
-.cal-weekdays {padding:12px 0;background:#fafcfb;}
-.cal-weekdays > :first-child,.cal-day:nth-child(7n + 1) .day-num {color:#bd403a;}
-.cal-weekdays > :last-child,.cal-day:nth-child(7n) .day-num {color:#3567a0;}
-.cal-day {min-height:106px;padding:7px 2px;}
-.day-num {font-size:14px;width:28px;height:28px;margin-bottom:5px;}
-.cal-day.today { background:#f0f8f4;box-shadow:inset 0 0 0 2px #236b59; }
-.cal-day.today .day-num {background:var(--primary)!important;box-shadow:none;}
-.cal-day:active {background:#e5eee9;}
-.shift-badge {font-size:12px;border-radius:6px;padding:3px 0;letter-spacing:-.5px;}
-.memo-tag {font-size:10px;font-weight:600;}
-.holiday-bar {font-size:10px;}
-body.ui-compact .cal-day {min-height:80px;}
-body.ui-compact .holiday-bar,body.ui-compact .memo-tag {height:5px;font-size:0;padding:0;border:0;min-height:5px;}
-.ui-summary {background:#e5efe9;border:1px solid #d5e4db;border-radius:18px;padding:18px;display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:20px;}
-.ui-eyebrow {font-size:12px;font-weight:700;color:#4b6558;}
-.ui-summary strong {display:block;font-size:23px;letter-spacing:-.8px;margin-top:3px;}
-.ui-summary button {background:#fff;border:1px solid #ccdcd2;border-radius:12px;padding:10px 14px;min-height:44px;color:var(--primary);font-weight:700;}
-.ui-tools {display:flex;justify-content:space-between;align-items:center;gap:8px;margin:0 0 12px;flex-wrap:wrap;}
-.ui-hint {font-size:12px;color:var(--text-sub);}
-.ui-density {display:flex;background:#e5ebe7;border-radius:10px;padding:3px;}
-.ui-density button {min-height:38px;border:0;border-radius:8px;padding:6px 12px;background:transparent;color:#526359;font-weight:700;}
-.ui-density button[aria-pressed=true] {background:white;color:var(--primary);box-shadow:0 1px 3px #0001;}
-.ui-legend {display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--text-sub);margin-bottom:18px;}
-.ui-legend i {display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;}
-.card {border-radius:18px;padding:20px;margin-bottom:16px;}
-.card-header {font-size:15px;gap:10px;flex-wrap:wrap;padding-bottom:12px;}
-.card-header > div {flex-wrap:wrap;}
-.card-header button {min-height:40px;}
-.input-group label {font-size:13px;white-space:normal;overflow:visible;min-height:20px;}
-.input-group input,.input-group select,.input-group textarea,#modal-memo-input {font-size:16px!important;min-height:48px;border-radius:10px;}
-input[readonly] {border-style:dashed;}
-input:focus,textarea:focus,select:focus {border-color:var(--primary);box-shadow:0 0 0 3px #236b591a;}
-:focus-visible {outline:3px solid #358474;outline-offset:3px;}
-.two-cols {gap:14px;margin-bottom:18px;}
-.btn-save,.btn-reset-data {min-height:48px;border-radius:12px;}
-.toggle-box {min-height:54px;gap:12px;border-radius:12px;}
-.toggle-box input {flex-shrink:0;width:22px;height:22px;}
-.salary-hero {padding:24px;border-radius:20px;background:linear-gradient(120deg,#1a3e33,#172d28);}
-.hero-amount {font-size:clamp(30px,8vw,40px);color:#c4f2d7;letter-spacing:-1px;font-variant-numeric:tabular-nums;}
-.hero-label {color:#bdcdc7;font-size:13px;}
-.hero-subgrid {border-color:#ffffff30;gap:16px;padding-top:16px;}
-.period-tag {font-size:12px;margin-bottom:14px;}
-.pay-table {font-size:14px;}
-.pay-table td {padding:12px 6px;}
-.pay-table td.num {white-space:nowrap;font-variant-numeric:tabular-nums;}
-.bottom-nav {max-width:760px;margin:auto;padding-top:8px;border-radius:20px 20px 0 0;box-shadow:0 -5px 24px #20392c08;gap:5px;}
-.nav-item {min-height:55px;border-radius:12px;font-size:12px;}
-.nav-item.active {background:#e8f1eb;color:var(--primary);}
-.modal-sheet {max-width:580px;max-height:90dvh;overscroll-behavior:contain;padding:16px 18px calc(24px + env(safe-area-inset-bottom));}
-.modal-title {position:sticky;top:-16px;background:white;z-index:2;padding:12px 0;gap:8px;}
-.modal-title button {min-width:44px;min-height:44px;flex-shrink:0;}
-.modal-title > div span {display:block;margin-left:0!important;}
-.opt-btn {min-height:66px;border-radius:12px;}
-.opt-btn.ui-selected {outline:2px solid var(--primary);outline-offset:1px;}
-.ui-shortcuts {display:flex;gap:8px;margin:-2px 0 18px;flex-wrap:wrap;}
-.ui-shortcuts button {background:white;border:1px solid var(--border);border-radius:12px;min-height:44px;padding:8px 14px;font-weight:700;color:var(--primary);}
-.ui-toast {position:fixed;bottom:calc(90px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#213d31;color:white;padding:12px 18px;border-radius:12px;z-index:500;font-size:14px;max-width:90vw;text-align:center;pointer-events:none;}
-.ui-toast:empty {display:none;}
-.ui-section-title {font-size:24px;letter-spacing:-1px;margin:4px 0 16px;}
-@media (max-width:380px) {.container{padding:10px 10px}.brand-title{font-size:17px}.header-chip{padding:5px 8px;font-size:11px}.app-header{gap:6px}.month-title-btn{font-size:16px}.nav-arrow-btn{width:32px}.gcal-nav-group{gap:4px}.gcal-chip-btn{padding:6px 8px}.card{padding:15px}.ui-summary{padding:15px}.ui-summary strong{font-size:21px}}
-@media (min-width:700px) {.container{padding-top:28px}.cal-day{min-height:120px}.modal-overlay{align-items:center}.modal-sheet{border-radius:22px}.shift-badge{max-width:76px}}
-@media (prefers-reduced-motion:reduce) {*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
-</style>
+
 </head>
 <body>
     <div class="container">
@@ -2533,67 +2501,6 @@ input:focus,textarea:focus,select:focus {border-color:var(--primary);box-shadow:
         };
     </script>
 
-<script>
-/* Presentation layer only: original calculation functions above are unchanged. */
-window.addEventListener('load', () => {
- const $ = id => document.getElementById(id);
- const calendar = $('view-calendar');
- calendar.insertAdjacentHTML('afterbegin', `<div class="ui-summary"><div><div class="ui-eyebrow" id="ui-today-date"></div><strong id="ui-today-shift"></strong></div><button id="ui-edit-today">오늘 기록</button></div>`);
- document.querySelector('.calendar-card').insertAdjacentHTML('beforebegin', `<div class="ui-tools"><span class="ui-hint">날짜를 눌러 근태·메모를 기록하세요</span><div class="ui-density" aria-label="달력 표시 밀도"><button id="ui-normal" aria-pressed="true">자세히</button><button id="ui-compact" aria-pressed="false">간결히</button></div></div>`);
- calendar.insertAdjacentHTML('beforeend', `<div class="ui-legend"><span><i style="background:#1967d2"></i>주간</span><span><i style="background:#6b21a8"></i>야간</span><span><i style="background:#d93025"></i>휴무</span><span><i style="background:#b45309"></i>특근</span><span><i style="background:#0d652d"></i>연차</span></div><p class="ui-hint">좌우로 밀면 월 이동 · 월 제목을 누르면 연월 선택<br>간결히 보기의 작은 막대는 공휴일·메모 표시입니다.</p>`);
- const toast=document.createElement('div');toast.className='ui-toast';toast.setAttribute('role','status');document.body.append(toast);
- let toastTimer;
- function notify(message){toast.textContent=message;clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.textContent='',2300);}
- function density(compact){document.body.classList.toggle('ui-compact',compact);$('ui-normal').setAttribute('aria-pressed',!compact);$('ui-compact').setAttribute('aria-pressed',compact);try{localStorage.setItem('shift_ui_compact',compact?'1':'0');}catch{}}
- $('ui-normal').onclick=()=>density(false);$('ui-compact').onclick=()=>density(true);
- try {density(localStorage.getItem('shift_ui_compact')==='1');} catch {}
- $('group-select').setAttribute('aria-label','근무조 선택');
- $('ui-edit-today').onclick=()=>{const d=new Date();openOverrideModal(toDateKey(d.getFullYear(),d.getMonth(),d.getDate()),d,getActualShift(d,currentGroup));};
- function enhanceCalendar(){
-  const d=new Date();$('ui-today-date').textContent=d.toLocaleDateString('ko-KR',{month:'long',day:'numeric',weekday:'long'})+' · '+currentGroup+'조';
-  const shift=getActualShift(d,currentGroup);$('ui-today-shift').textContent='오늘은 '+shift.name+(shift.dayNum?' '+shift.dayNum+'일차':'');
-  document.querySelectorAll('#calendar-grid .cal-day:not(.other-month)').forEach(cell=>{
-   cell.tabIndex=0;cell.setAttribute('role','button');cell.setAttribute('aria-label',$('cal-month-title-text').textContent+' '+cell.innerText.replace(/\n/g,' ')+' · 근태 및 메모 수정');
-   if(cell.classList.contains('today'))cell.setAttribute('aria-current','date');
-   cell.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();cell.click();}};
-  });
- }
- new MutationObserver(enhanceCalendar).observe($('calendar-grid'),{childList:true});enhanceCalendar();
- document.querySelectorAll('.input-group').forEach(group=>{const label=group.querySelector('label'),input=group.querySelector('input,select,textarea');if(label&&input){label.htmlFor=input.id;if(input.type==='number')input.inputMode='decimal';}});
- document.querySelectorAll('.toggle-box').forEach(box=>{const label=box.querySelector('label'),input=box.querySelector('input');if(label&&input)input.setAttribute('aria-labelledby',label.id);});
- $('modal-memo-input').setAttribute('aria-label','선택한 날짜의 메모');
- $('view-leave').insertAdjacentHTML('afterbegin','<h1 class="ui-section-title">연차와 급여 설정</h1>');
- const payCards=$('view-payroll').querySelectorAll('.card');payCards[0].id='ui-pay-inputs';payCards[1].id='ui-pay-details';$('salary-hero-card').insertAdjacentHTML('afterend','<div class="ui-shortcuts"><button data-ui-jump="ui-pay-details">지급 상세 ↓</button><button data-ui-jump="ui-pay-inputs">근무·수당 입력 ↓</button><button id="ui-wage-settings">시급 설정 ↗</button></div>');
- document.querySelectorAll('[data-ui-jump]').forEach(b=>b.onclick=()=>$(b.dataset.uiJump).scrollIntoView({behavior:'smooth',block:'start'}));
- $('ui-wage-settings').onclick=()=>{switchView('leave');setTimeout(()=>$('input-base-hourly').focus(),100);};
- // Existing reset also deletes memos; make the scope visible without changing it.
- document.querySelectorAll('button[onclick="resetDefaults()"]').forEach(b=>{b.textContent='설정·메모 초기화';b.title='급여 설정과 모든 날짜 메모를 초기화합니다';});
- document.querySelectorAll('button[onclick="manualSaveData()"]').forEach(b=>b.textContent='급여·연차 설정 저장');
- const info=$('view-leave').lastElementChild.querySelector('div[style]');
- if(info) {const note=document.createElement('p');note.className='ui-hint';note.style.marginTop='12px';note.textContent='저장 데이터는 현재 브라우저에 보관됩니다. 기기·브라우저가 바뀌면 자동으로 공유되지 않습니다. 근무일수 직접 입력은 재동기화 시 달력 기준으로 바뀝니다.';info.append(note);}
- document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const action=b.getAttribute('onclick')||'';if(action==='saveMemoDirect()')notify('메모를 저장했습니다');if(action.startsWith('setDayOverride('))notify('근태를 반영했습니다');});
- // Modal focus, keyboard dismissal, scroll lock and selected state.
- let activeModal=null,returnFocus=null,scrollY=0;
- const modalNames={'modal-override':'근태 및 메모 변경','modal-month-stats':'근무 통계','modal-year-month-picker':'연도와 월 선택','modal-payslip-alert':'급여명세서 알림'};
- const closers={'modal-override':closeModalDirect,'modal-month-stats':closeMonthStatsModalDirect,'modal-year-month-picker':closeYearMonthPickerDirect,'modal-payslip-alert':closePayslipModalDirect};
- const focusable=m=>[...m.querySelectorAll('button,input,select,textarea,[tabindex="0"]')].filter(el=>!el.disabled&&el.getClientRects().length);
- document.querySelectorAll('.modal-overlay').forEach(m=>{
-  const sheet=m.querySelector('.modal-sheet');sheet.setAttribute('role','dialog');sheet.setAttribute('aria-modal','true');sheet.setAttribute('aria-label',modalNames[m.id]);sheet.tabIndex=-1;
-  m.querySelectorAll('.modal-title button').forEach(b=>b.setAttribute('aria-label','닫기'));
-  new MutationObserver(()=>{
-   if(m.classList.contains('active')){
-    if(!activeModal){returnFocus=document.activeElement;scrollY=window.scrollY;document.body.style.position='fixed';document.body.style.top=-scrollY+'px';document.body.style.width='100%';}
-    activeModal=m;document.querySelector('.container').inert=true;document.querySelector('.bottom-nav').inert=true;sheet.focus({preventScroll:true});
-    m.querySelectorAll('.opt-btn').forEach(b=>{const match=(b.getAttribute('onclick')||'').match(/setDayOverride\('([^']+)'\)/);const selected=match?overrides[selectedDateStr]===match[1]:!overrides[selectedDateStr];b.classList.toggle('ui-selected',selected);b.setAttribute('aria-pressed',selected);});
-   }else if(activeModal===m){activeModal=null;document.body.style.position='';document.body.style.top='';document.body.style.width='';document.querySelector('.container').inert=false;document.querySelector('.bottom-nav').inert=false;window.scrollTo(0,scrollY);if(returnFocus?.isConnected)returnFocus.focus({preventScroll:true});}
-  }).observe(m,{attributes:true,attributeFilter:['class']});
-  if(m.classList.contains('active')){m.classList.remove('active');m.classList.add('active');}
- });
- document.addEventListener('keydown',e=>{if(!activeModal)return;if(e.key==='Escape'){e.preventDefault();closers[activeModal.id]();}if(e.key==='Tab'){const items=focusable(activeModal),first=items[0],last=items.at(-1);if(!first){e.preventDefault();return;}if(e.shiftKey&&(document.activeElement===first||!items.includes(document.activeElement))){e.preventDefault();last.focus();}else if(!e.shiftKey&&(document.activeElement===last||!items.includes(document.activeElement))){e.preventDefault();first.focus();}}});
- const nav=document.querySelector('.bottom-nav');nav.setAttribute('aria-label','주요 화면');
- const updateNav=()=>nav.querySelectorAll('button').forEach(b=>{if(b.classList.contains('active'))b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
- nav.querySelectorAll('button').forEach(b=>new MutationObserver(updateNav).observe(b,{attributes:true,attributeFilter:['class']}));updateNav();
-});
-</script>
+
 </body>
 </html>
