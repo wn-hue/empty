@@ -2,8 +2,10 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>동도금 PM 일일 보고 & 스케줄 플래너</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>동도금 PM 일정 & 실시간 통합 모니터링</title>
 
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -11,14 +13,13 @@
 
 <style>
   :root {
-    --bg-base: #f8fafc;
+    --bg-base: #f1f5f9;
     --bg-card: #ffffff;
     --border: #cbd5e1;
     --border-light: #e2e8f0;
     --text-primary: #0f172a;
     --text-secondary: #475569;
     --accent: #0284c7;
-    --accent-hover: #0369a1;
     --accent-light: #e0f2fe;
     --warning: #d97706;
     --warning-light: #fef3c7;
@@ -30,70 +31,108 @@
     --purple-light: #ede9fe;
   }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
     background-color: var(--bg-base);
     color: var(--text-primary);
-    padding: 16px;
-    font-size: 13.5px;
+    padding: calc(12px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left));
+    font-size: 14px;
     line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
   }
 
-  .container { max-width: 1440px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+  .container { max-width: 1400px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+
+  .remind-banner {
+    background: #fdf4ff;
+    border: 1px solid #f0abfc;
+    border-left: 5px solid var(--purple);
+    padding: 10px 14px;
+    border-radius: 10px;
+    display: none;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: #86198f;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+  }
+  .remind-banner strong { font-weight: 800; }
+  .remind-close-btn {
+    background: none; border: none; font-size: 16px; cursor: pointer; color: #86198f; font-weight: bold; padding: 0 6px;
+  }
 
   header {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 20px;
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .header-top {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 8px;
     flex-wrap: wrap;
-    gap: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
   }
-  .header-title h1 { font-size: 18px; font-weight: 800; color: var(--accent); }
-  .header-title p { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  .header-top h1 { font-size: 19px; font-weight: 800; color: var(--accent); }
+  .header-top-buttons { display: flex; gap: 6px; }
 
-  .date-controller {
+  .header-bottom-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8fafc;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 8px 12px;
+  }
+  .sync-status-badge {
+    font-size: 12px;
+    font-weight: 700;
     display: flex;
     align-items: center;
-    gap: 6px;
-    background: #f1f5f9;
-    padding: 4px 8px;
-    border-radius: 8px;
-    border: 1px solid var(--border-light);
+    gap: 5px;
   }
-  .date-display {
-    font-size: 14px;
+  .live-clock-box {
+    font-size: 13.5px;
     font-weight: 800;
-    color: var(--text-primary);
-    min-width: 150px;
-    text-align: center;
+    color: var(--accent);
+    font-family: -apple-system, monospace;
+    display: flex;
+    align-items: center;
+    gap: 5px;
   }
 
   .main-nav {
     display: flex;
     gap: 6px;
     border-bottom: 2px solid var(--border);
+    padding-bottom: 2px;
   }
   .nav-btn {
     background: #e2e8f0;
     border: 1px solid var(--border);
     border-bottom: none;
     color: var(--text-secondary);
-    padding: 9px 18px;
+    padding: 10px 14px;
     font-size: 13.5px;
     font-weight: 700;
     cursor: pointer;
     border-radius: 8px 8px 0 0;
     transition: 0.15s;
+    touch-action: manipulation;
+    flex: 1;
+    text-align: center;
   }
   .nav-btn.active {
     background: var(--bg-card);
     color: var(--accent);
+    border: 1px solid var(--border);
     border-bottom: 2px solid var(--bg-card);
     margin-bottom: -2px;
   }
@@ -104,15 +143,15 @@
   .card {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px;
+    border-radius: 12px;
+    padding: 16px 18px;
     display: flex;
     flex-direction: column;
     gap: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
   }
-  .card-header {
-    font-size: 14.5px;
+  .card-title {
+    font-size: 15px;
     font-weight: 700;
     display: flex;
     justify-content: space-between;
@@ -123,409 +162,566 @@
     flex-wrap: wrap;
   }
 
-  .report-workspace {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
-  @media (min-width: 1024px) {
-    .report-workspace { grid-template-columns: 1.15fr 0.85fr; }
-  }
-
-  .alert-banner {
-    padding: 10px 14px;
-    border-radius: 6px;
-    font-size: 12.5px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .alert-banner.warning { background: var(--warning-light); color: #92400e; border: 1px solid #fde68a; }
-  .alert-banner.purple { background: var(--purple-light); color: #5b21b6; border: 1px solid #ddd6fe; }
-
-  .pm-group {
-    background: #f8fafc;
-    border: 1px solid var(--border-light);
-    border-radius: 8px;
-    padding: 10px 12px;
-  }
-  .pm-group-title {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text-secondary);
-    margin-bottom: 6px;
-  }
-  .pm-pill-list { display: flex; flex-wrap: wrap; gap: 6px; }
-  .pm-pill {
-    background: #fff;
-    border: 1px solid var(--border);
-    padding: 4px 9px;
-    border-radius: 6px;
-    font-size: 12.5px;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-  }
-  .pm-pill.highlight { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
-
-  .badge {
-    font-size: 11px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: 700;
-    white-space: nowrap;
-  }
-  .badge-blue { background: var(--accent-light); color: var(--accent); }
-  .badge-purple { background: var(--purple-light); color: var(--purple); }
-  .badge-green { background: var(--success-light); color: var(--success); }
-  .badge-sub { background: #e2e8f0; color: #475569; }
-
   input, select, textarea {
     background: #ffffff;
     border: 1px solid var(--border);
     color: var(--text-primary);
-    padding: 6px 9px;
-    border-radius: 6px;
-    font-size: 12.5px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    font-size: 16px;
+    -webkit-appearance: none;
+  }
+  @media(min-width: 768px) {
+    input, select, textarea { font-size: 13.5px; padding: 6px 10px; }
   }
   input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
-
+  
   .btn {
     background: var(--accent);
     color: #fff;
     border: none;
-    padding: 6px 12px;
-    border-radius: 6px;
+    padding: 8px 14px;
+    border-radius: 8px;
     font-weight: 700;
-    font-size: 12.5px;
+    font-size: 13px;
     cursor: pointer;
     transition: 0.15s;
     white-space: nowrap;
+    touch-action: manipulation;
+    -webkit-appearance: none;
   }
-  .btn:hover { background: var(--accent-hover); }
+  .btn:hover { background: #0369a1; }
   .btn-sub { background: #64748b; color: #fff; }
   .btn-sub:hover { background: #475569; }
-  .btn-success { background: var(--success); color: #fff; }
-  .btn-success:hover { background: #15803d; }
-  .btn-sm { padding: 4px 8px; font-size: 11.5px; }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
 
-  .report-textarea {
+  .parser-box {
+    background: #fefce8;
+    border: 1px solid #fef08a;
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .parser-header { display: flex; flex-direction: column; gap: 2px; }
+
+  .report-area {
     width: 100%;
-    height: 520px;
+    min-height: 380px;
+    background: #f8fafc;
+    color: #0f172a;
+    font-family: -apple-system, Consolas, monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    resize: vertical;
+  }
+
+  .grid-2col-even {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  @media(min-width: 1024px) {
+    .grid-2col-even { grid-template-columns: 1fr 1fr; }
+  }
+
+  .gauge-box {
     background: #f8fafc;
     border: 1px solid var(--border);
-    border-radius: 8px;
+    border-radius: 10px;
     padding: 14px;
-    font-family: Consolas, "Courier New", monospace;
-    font-size: 13.5px;
-    line-height: 1.65;
-    color: #0f172a;
-    resize: vertical;
-    white-space: pre-wrap;
-  }
-
-  .table-responsive { width: 100%; overflow-x: auto; border: 1px solid var(--border-light); border-radius: 8px; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
-  th, td { padding: 9px 12px; border: 1px solid var(--border-light); text-align: left; }
-  th { background: #f8fafc; color: var(--text-secondary); font-weight: 700; }
-  .today-col { background: #f0f9ff !important; border-left: 2px solid var(--accent) !important; border-right: 2px solid var(--accent) !important; }
-
-  .note-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    background: #ffedd5;
-    color: #9a3412;
-    font-size: 11.5px;
-    padding: 2px 7px;
-    border-radius: 4px;
-    margin: 2px;
-  }
-  .note-tag button { background: none; border: none; color: #9a3412; cursor: pointer; font-weight: bold; }
-
-  .elec-type-row {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+    flex-direction: column;
+    gap: 9px;
+  }
+  .gauge-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .progress-track {
+    width: 100%; height: 16px; background: #e2e8f0; border-radius: 8px; overflow: hidden;
+  }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #38bdf8, #0284c7); transition: width 0.4s ease; }
+  .progress-fill.warn { background: linear-gradient(90deg, #f59e0b, #d97706); }
+  .progress-fill.alert { background: linear-gradient(90deg, #ef4444, #b91c1c); }
+  .progress-fill.done { background: linear-gradient(90deg, #22c55e, #16a34a); }
+
+  .timeline-ticks { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-secondary); }
+  .status-detail-box {
+    background: #ffffff; border: 1px solid var(--border-light); border-left: 4px solid var(--accent);
+    padding: 10px 12px; border-radius: 8px; font-size: 13px; display: flex; flex-direction: column; gap: 4px;
+  }
+
+  .badge {
+    font-size: 11px; padding: 2px 7px; border-radius: 5px; font-weight: 700; display: inline-block; white-space: nowrap;
+  }
+  .badge-blue { background: var(--accent-light); color: var(--accent); }
+  .badge-yellow { background: var(--warning-light); color: var(--warning); }
+  .badge-red { background: var(--danger-light); color: var(--danger); }
+  .badge-green { background: var(--success-light); color: var(--success); }
+  .badge-purple { background: var(--purple-light); color: var(--purple); }
+  .badge-sub { background: #e2e8f0; color: #475569; }
+
+  .pulse-step-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-top: 2px;
+  }
+  .pulse-step-item {
     background: #ffffff;
     border: 1px solid var(--border-light);
-    padding: 6px 10px;
     border-radius: 6px;
-    flex-wrap: wrap;
+    padding: 6px 4px;
+    font-size: 11px;
+    text-align: center;
+    font-weight: 700;
+    color: var(--text-secondary);
+  }
+  .pulse-step-item.done { background: #ecfdf5; border-color: #a7f3d0; color: var(--success); }
+  .pulse-step-item.active { background: #f3e8ff; border-color: #c084fc; color: var(--purple); }
+
+  .status-step-group-compact {
+    display: inline-flex;
+    background: #e2e8f0;
+    border-radius: 6px;
+    padding: 2px;
+    gap: 2px;
+  }
+  .status-step-btn-compact {
+    border: none;
+    background: transparent;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: 0.15s;
+    touch-action: manipulation;
+  }
+  .status-step-btn-compact.active-시작 { background: var(--accent); color: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+  .status-step-btn-compact.active-완료 { background: var(--success); color: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.65);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    padding: 12px;
+    backdrop-filter: blur(3px);
+  }
+  .modal-content {
+    background: #fff;
+    border-radius: 14px;
+    width: 100%;
+    max-width: 1100px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    overflow: hidden;
+  }
+  .modal-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .modal-body {
+    padding: 14px 18px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; }
+  th, td { padding: 10px 11px; border: 1px solid var(--border-light); text-align: left; vertical-align: top; }
+  th { background: #f8fafc; color: var(--text-secondary); font-weight: 700; }
+  .today-col { background: #f0f9ff !important; border-left: 2px solid var(--accent); border-right: 2px solid var(--accent); }
+  .weekend-th { background: #fef2f2; color: #b91c1c; }
+  .weekend-sat-th { background: #eff6ff; color: #1d4ed8; }
+
+  .note-chip {
+    display: inline-flex; align-items: center; gap: 5px; background: #ffedd5;
+    color: #9a3412; font-size: 11.5px; padding: 3px 8px; border-radius: 4px; margin: 2px;
+  }
+  .note-chip button {
+    background: none; border: none; color: #9a3412; cursor: pointer; font-weight: bold; font-size: 12px;
+  }
+
+  @media (max-width: 640px) {
+    .pulse-step-container { grid-template-columns: repeat(2, 1fr); }
+    .nav-btn { font-size: 12.5px; padding: 9px 4px; }
   }
 </style>
 </head>
 <body>
 
 <div class="container">
+  <div id="remindBanner" class="remind-banner">
+    <div id="remindBannerText">🔔 <strong>[액퍼내기 4주 전 알림]</strong> 건욕 일정이 도래했습니다.</div>
+    <button class="remind-close-btn" onclick="dismissRemindBanner()">✕</button>
+  </div>
+
   <header>
-    <div class="header-title">
-      <h1>동도금 PM 일일 보고 & 스케줄 플래너</h1>
-      <p>당일 PM 및 익일 08:30 마감 기준 자동 산출 · 특이사항 연동</p>
-    </div>
-    
-    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-      <div class="date-controller">
-        <button class="btn btn-sub btn-sm" onclick="shiftDate(-1)">◀ 전일</button>
-        <span id="currentDateDisplay" class="date-display">로딩 중...</span>
-        <button class="btn btn-sub btn-sm" onclick="shiftDate(1)">익일 ▶</button>
-        <button class="btn btn-sm" onclick="setToday()">오늘</button>
+    <div class="header-top">
+      <h1>동도금 PM 모니터링</h1>
+      <div class="header-top-buttons">
+        <button class="btn btn-sub btn-sm" onclick="openModal('matrixModal')">🗓️ 주간 매트릭스</button>
+        <button class="btn btn-sub btn-sm" onclick="openModal('pulseModal')">💧 액퍼내기</button>
       </div>
-      <div id="syncStatus" style="font-size:12px; font-weight:700; color:#64748b;">⚪ 서버 연결 확인 중...</div>
+    </div>
+    <div class="header-bottom-bar">
+      <div id="syncStatus" class="sync-status-badge">
+        <span>⚪</span> 연결 확인 중...
+      </div>
+      <div class="live-clock-box">
+        <span>🕒</span> <span id="liveClock">로딩 중...</span>
+      </div>
     </div>
   </header>
 
   <div class="main-nav">
-    <button class="nav-btn active" id="tabBtnReport" onclick="switchTab('report')">📋 오늘의 PM 브리핑 & 보고</button>
-    <button class="nav-btn" id="tabBtnMatrix" onclick="switchTab('matrix')">🗓️ 주간 PM 매트릭스</button>
-    <button class="nav-btn" id="tabBtnCycle" onclick="switchTab('cycle')">🧪 화학동 & 펄스 주기 설정</button>
+    <button class="nav-btn active" id="tabBtn1" onclick="switchTab('tab1')">
+      📋 오늘 브리핑
+    </button>
+    <button class="nav-btn" id="tabBtn2" onclick="switchTab('tab2')">
+      ⚡ 진척 게이지
+    </button>
+    <button class="nav-btn" id="tabBtn3" onclick="switchTab('tab3')">
+      🧪 화학동 관리
+    </button>
+    <button class="nav-btn" id="tabBtn4" onclick="switchTab('tab4')">
+      ✏️ 특이사항 수동
+    </button>
   </div>
 
-  <!-- [탭 1] 브리핑 메인 화면 -->
-  <div id="tabReport" class="tab-pane active">
-    <div id="alertBannerContainer" style="display:flex; flex-direction:column; gap:6px; margin-bottom:12px;"></div>
+  <!-- [탭 1] 오늘 PM 브리핑 & 공유 -->
+  <div id="tab1" class="tab-pane active">
+    <div style="max-width: 820px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px;">
+      
+      <div class="parser-box">
+        <div class="parser-header">
+          <strong style="color: #854d0e; font-size: 14px;">📲 카톡 PM 내용 붙여넣기 자동 반영</strong>
+          <span style="font-size: 11.5px; color: #a16207;">공지 텍스트를 붙여넣으면 화학동 예정시간과 상태가 자동 변경됩니다.</span>
+        </div>
+        <textarea id="kakaoRawInput" rows="2" style="width: 100%; font-size: 13.5px; padding: 8px; border-radius: 6px; border: 1px solid #fde047;" placeholder="카카오톡으로 공유된 PM 공지 메시지를 여기에 그대로 붙여넣으세요..."></textarea>
+        <div style="text-align: right;">
+          <button class="btn btn-sm" style="background: #eab308; color: #713f12;" onclick="parseAndApplyKakaoMsg()">⚡ 자동 분석 및 실시간 반영</button>
+        </div>
+      </div>
 
-    <div class="report-workspace">
+      <div class="card">
+        <div class="card-title">
+          <span id="briefingTitle" style="font-size: 16px;">오늘 PM 브리핑</span>
+          <span class="badge badge-blue">익일 08:30 이전 취합</span>
+        </div>
+
+        <div style="display:flex; gap:8px; align-items:center; justify-content:space-between; flex-wrap:wrap; background:#f8fafc; padding:10px 12px; border-radius:8px; border:1px solid #e2e8f0;">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <button type="button" class="btn btn-sm" id="btnDateToday" onclick="selectQuickDay('today')">오늘</button>
+            <button type="button" class="btn btn-sub btn-sm" id="btnDateTomorrow" onclick="selectQuickDay('tomorrow')">내일</button>
+          </div>
+          <div style="display:flex; align-items:center; gap:5px;">
+            <span style="font-size:12px; color:var(--text-secondary);">패스 기준:</span>
+            <input type="text" id="passTimeInput" value="7시패스" style="width:85px; padding:5px 8px;" oninput="generateShareText()">
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-sub btn-sm" onclick="generateShareText()">새로고침</button>
+            <button class="btn btn-sm" onclick="copyShareText()">텍스트 복사</button>
+          </div>
+        </div>
+
+        <textarea id="shareTextOutput" class="report-area" readonly></textarea>
+
+        <div style="margin-top: 4px; background: #ffffff; border: 1px solid var(--border-light); border-radius: 8px; padding: 12px 14px;">
+          <div style="font-weight: 700; font-size: 13.5px; color: var(--accent); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+            <span>🧪 일반 화학동 PM 현황 (화7, 화8, 화9, 화13, 화14)</span>
+            <span style="font-size: 11px; color: var(--text-secondary); font-weight: normal;">* PM 진행 시 시작 시각 표기</span>
+          </div>
+          <div id="tab1ChemStatusContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- [탭 2] 자동 진척 게이지 -->
+  <div id="tab2" class="tab-pane">
+    <div class="grid-2col-even">
       <div style="display:flex; flex-direction:column; gap:12px;">
+        <div class="card">
+          <div class="card-title">
+            <span>🧪 1. 일반 화학동 진행 진척 (12시간 액이송 기준)</span>
+            <span class="badge badge-blue">진행 라인 자동 연동</span>
+          </div>
+          <div id="activeChemGaugesContainer" style="display:flex; flex-direction:column; gap:12px;"></div>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <div class="card">
+          <div class="card-title">
+            <span>⚡ 2. 전기동 PM 자동 진척 게이지</span>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="badge badge-blue" id="elecTodayLinesBadge">전기동</span>
+              <button class="btn btn-sub btn-sm" id="btnRestoreElec" style="display:none; padding:3px 7px; font-size:11px;" onclick="restoreCompletedElec()">복구</button>
+            </div>
+          </div>
+          <div id="elecGaugesContainer" style="display:flex; flex-direction:column; gap:10px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- [탭 3] 화학동 주기 관리 -->
+  <div id="tab3" class="tab-pane">
+    <div class="card">
+      <div class="card-title">
+        <span>🧪 화학동 72시간 주기 & 화8 48시간 빌드업 설정</span>
+        <button class="btn btn-sub btn-sm" onclick="syncDataToFirebase()">동기화 저장</button>
+      </div>
+      <div style="font-size:12px; color:var(--text-secondary);">
+        💡 상태는 <strong>[시작 / 완료]</strong>로 관리되며, 시간은 <strong>0분 / 30분</strong>으로 선택됩니다.
+      </div>
+      <div id="chemListContainer" style="display:flex; flex-direction:column; gap:10px;"></div>
+    </div>
+  </div>
+
+  <!-- [탭 4] 라인별 특이사항 수동 입력 -->
+  <div id="tab4" class="tab-pane">
+    <div class="card">
+      <div class="card-title">
+        <span>✏️ 라인 / 날짜별 특이사항 수동 입력 관리</span>
+        <span class="badge badge-yellow">매트릭스 & 브리핑 연동</span>
+      </div>
+      
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <div style="display:flex; align-items:center; gap:2px;">
+          <input type="number" id="manualMonthInput" min="1" max="12" style="width:48px; text-align:center;">월
+          <input type="number" id="manualDayInput" min="1" max="31" style="width:48px; text-align:center;">일
+        </div>
         
-        <!-- 기준 설정 & 전기동 유형 커스텀 -->
-        <div class="card">
-          <div class="card-header">
-            <span>⚙️ 기준 설정 & 금일 전기동 PM 유형</span>
-          </div>
-          <div style="display:flex; gap:12px; flex-wrap:wrap;">
-            <div style="display:flex; align-items:center; gap:6px;">
-              <label style="font-weight:700;">기본 패스 기준:</label>
-              <input type="text" id="passTimeInput" value="7시패스" style="width:90px;" oninput="generateReport()">
-            </div>
-            <div style="display:flex; align-items:center; gap:6px;">
-              <label style="font-weight:700;">금일 에칭 PM:</label>
-              <input type="text" id="etchingInput" value="에3.4" style="width:80px;" oninput="generateReport()">
-            </div>
-          </div>
-
-          <!-- 금일 전기동 PM 유형 동적 설정 영역 -->
-          <div style="display:flex; flex-direction:column; gap:6px; margin-top:4px;">
-            <div style="font-size:12px; font-weight:700; color:var(--text-secondary);">
-              ⚡ 금일 전기동 작업 유형 설정 (기본: 산세.박리 / 변경 시 즉시 반영)
-            </div>
-            <div id="todayElecConfigContainer" style="display:flex; flex-direction:column; gap:6px;"></div>
-          </div>
-        </div>
-
-        <!-- 자동 추출된 PM 요약 -->
-        <div class="card">
-          <div class="card-header">
-            <span>🔍 자동 추출된 PM 요약</span>
-            <span class="badge badge-blue" id="dayOfWeekBadge">요일</span>
-          </div>
-          <div style="display:flex; flex-direction:column; gap:8px;">
-            <div class="pm-group">
-              <div class="pm-group-title">데버링 / 고압수세 / 에칭</div>
-              <div class="pm-pill-list" id="listDebarr"></div>
-            </div>
-            <div class="pm-group">
-              <div class="pm-group-title">디스미어 & 블랙홀</div>
-              <div class="pm-pill-list" id="listDesmear"></div>
-            </div>
-            <div class="pm-group">
-              <div class="pm-group-title">화학동 (당일 PM & 익일 08:30 이전)</div>
-              <div class="pm-pill-list" id="listChem"></div>
-            </div>
-            <div class="pm-group">
-              <div class="pm-group-title">전기동</div>
-              <div class="pm-pill-list" id="listElectro"></div>
-            </div>
-            <div class="pm-group" id="ongoingGroupWrapper" style="display:none; background:#fff7ed; border-color:#fed7aa;">
-              <div class="pm-group-title" style="color:#c2410c;">현재 진행 중인 PM (보고서 맨 하단 배치)</div>
-              <div class="pm-pill-list" id="listOngoing"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 특이사항 추가 -->
-        <div class="card">
-          <div class="card-header">
-            <span>✏️ 금일 특이사항 빠른 추가</span>
-          </div>
-          <div style="display:flex; gap:6px; flex-wrap:wrap;">
-            <select id="quickLineSelect" style="width:130px;">
+        <div>
+          <select id="manualLineSelect" onchange="checkCustomLineInput(this.value)" style="width:145px; font-weight:700;">
+            <optgroup label="에칭">
+              <option value="에1.2">에1.2</option>
+              <option value="에3.4">에3.4</option>
+              <option value="에6">에6</option>
+            </optgroup>
+            <optgroup label="디스미어">
+              <option value="디스미어 6">디스미어 6</option>
+              <option value="디스미어 7">디스미어 7</option>
               <option value="디스미어 8">디스미어 8</option>
+              <option value="디스미어 9">디스미어 9</option>
               <option value="디스미어 10">디스미어 10</option>
               <option value="디스미어 11">디스미어 11</option>
+              <option value="디스미어 12">디스미어 12</option>
               <option value="디스미어 15">디스미어 15</option>
-              <option value="전기동 9">전기동 9</option>
-              <option value="전기동 13">전기동 13</option>
-              <option value="전기동 14">전기동 14</option>
-              <option value="전기동 16">전기동 16</option>
-              <option value="전기동 17">전기동 17</option>
-              <option value="전기동 20">전기동 20</option>
-              <option value="전기동 21">전기동 21</option>
+            </optgroup>
+            <optgroup label="일반 화학동">
               <option value="화7">화7</option>
               <option value="화8">화8</option>
               <option value="화9">화9</option>
               <option value="화13">화13</option>
               <option value="화14">화14</option>
-            </select>
-            <input type="text" id="quickNoteText" placeholder="내용 입력 또는 아래 버튼 클릭" style="flex:1; min-width:160px;">
-            <button class="btn" onclick="addTodayNote()">추가</button>
-          </div>
-          <div style="display:flex; gap:5px; flex-wrap:wrap;">
-            <button class="btn btn-sub btn-sm" onclick="setQuickText('인써트 교체')">⚡ + 인써트 교체 (04시)</button>
-            <button class="btn btn-sub btn-sm" onclick="setQuickText('초음파점검')">⚡ + 초음파점검 (04시)</button>
-            <button class="btn btn-sub btn-sm" onclick="setQuickText('스웰러 건욕')">+ 스웰러 건욕</button>
-            <button class="btn btn-sub btn-sm" onclick="setQuickText('망간 건욕')">+ 망간 건욕</button>
-            <button class="btn btn-sub btn-sm" onclick="setQuickText('설비작업(17시)')">+ 설비작업(17시)</button>
-            <button class="btn btn-sub btn-sm" onclick="setQuickText('0시PM중')">+ 0시PM중</button>
-          </div>
-          <div id="todayNotesList" style="display:flex; flex-wrap:wrap; gap:4px; margin-top:2px;"></div>
+            </optgroup>
+            <optgroup label="블랙홀 (정기PM)">
+              <option value="화10">화10</option>
+              <option value="화11">화11</option>
+              <option value="화12">화12</option>
+            </optgroup>
+            <optgroup label="전기동">
+              <option value="전기동 9">전기동 9 (펄스)</option>
+              <option value="전기동 11">전기동 11</option>
+              <option value="전기동 12">전기동 12</option>
+              <option value="전기동 13">전기동 13</option>
+              <option value="전기동 14">전기동 14</option>
+              <option value="전기동 15">전기동 15</option>
+              <option value="전기동 16">전기동 16</option>
+              <option value="전기동 17">전기동 17</option>
+              <option value="전기동 18">전기동 18</option>
+              <option value="전기동 20">전기동 20 (펄스)</option>
+              <option value="전기동 21">전기동 21 (펄스)</option>
+              <option value="전기동 22">전기동 22</option>
+              <option value="MSF 전기동">MSF 전기동</option>
+            </optgroup>
+            <optgroup label="기타">
+              <option value="CUSTOM">[직접 입력]</option>
+            </optgroup>
+          </select>
+          <input type="text" id="manualCustomLineInput" placeholder="라인명 직접입력" style="display:none; width:120px; margin-left:4px;">
         </div>
-      </div>
 
-      <!-- 우측: 최종 보고서 텍스트 -->
-      <div class="card" style="height:fit-content;">
-        <div class="card-header">
-          <span>📋 최종 PM 보고문</span>
-          <button class="btn btn-success" onclick="copyReport()">📋 카톡 / 보고용 복사</button>
+        <div style="flex:1; min-width:160px;">
+          <input type="text" id="manualContentInput" placeholder="특이사항 직접 입력 또는 아래 태그 클릭" style="width:100%;">
         </div>
-        <textarea id="reportOutput" class="report-textarea" spellcheck="false"></textarea>
-      </div>
-    </div>
-  </div>
-
-  <!-- [탭 2] 주간 PM 매트릭스 -->
-  <div id="tabMatrix" class="tab-pane">
-    <div class="card">
-      <div class="card-header">
         <div>
-          <span>🗓️ 주간 PM 종합 매트릭스 (월~일)</span>
-          <span class="badge badge-blue" id="matrixWeekRange"></span>
+          <button class="btn" onclick="addManualNote()">등록</button>
         </div>
-        <span style="font-size:12px; color:var(--text-secondary);">요일을 클릭하면 해당 날짜로 즉시 전환됩니다.</span>
       </div>
-      <div class="table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th style="width:110px;">공정</th>
-              <th id="th_1" style="width:12.5%;">월</th>
-              <th id="th_2" style="width:12.5%;">화</th>
-              <th id="th_3" style="width:12.5%;">수</th>
-              <th id="th_4" style="width:12.5%;">목</th>
-              <th id="th_5" style="width:12.5%;">금</th>
-              <th id="th_6" style="width:12.5%;">토</th>
-              <th id="th_7" style="width:12.5%;">일</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td style="background:#fafafa;"><strong>데버링/고압수세</strong></td>
-              <td>고압수세 1 <span id="m_tag_wash1" class="badge"></span></td>
-              <td>-</td>
-              <td><strong>데버링 3</strong></td>
-              <td>-</td>
-              <td><strong>데버링 2</strong></td>
-              <td>-</td>
-              <td>-</td>
-            </tr>
-            <tr>
-              <td style="background:#fafafa;"><strong>디스미어</strong></td>
-              <td>
-                <div>디스미어 8</div>
-                <div>디스미어 11 <span id="m_tag_des11" class="badge"></span></div>
-                <div>디스미어 15 <span id="m_tag_des15" class="badge"></span></div>
-              </td>
-              <td><div>디스미어 9</div><div>디스미어 6</div></td>
-              <td><div>디스미어 12</div></td>
-              <td><div>디스미어 7</div></td>
-              <td><div>디스미어 10</div></td>
-              <td>-</td>
-              <td>-</td>
-            </tr>
-            <tr style="background:#f0fdf4;">
-              <td><strong style="color:var(--accent);">일반 화학동</strong><br><span style="font-size:11px; color:var(--text-secondary);">(72H 주기)</span></td>
-              <td id="m_chem_1">-</td>
-              <td id="m_chem_2">-</td>
-              <td id="m_chem_3">-</td>
-              <td id="m_chem_4">-</td>
-              <td id="m_chem_5">-</td>
-              <td id="m_chem_6">-</td>
-              <td id="m_chem_7">-</td>
-            </tr>
-            <tr style="background:#faf5ff;">
-              <td><strong style="color:var(--purple);">블랙홀</strong></td>
-              <td><span class="badge badge-purple">화12 정기PM</span></td>
-              <td>-</td>
-              <td><span class="badge badge-purple">화11 정기PM</span></td>
-              <td>-</td>
-              <td><span class="badge badge-purple">화10 정기PM</span></td>
-              <td>-</td>
-              <td>-</td>
-            </tr>
-            <tr>
-              <td style="background:#fafafa;"><strong>전기동</strong></td>
-              <td><div>전기동 9 (펄스)</div><div>전기동 16</div></td>
-              <td><div>전기동 18</div><div>전기동 22</div></td>
-              <td><div>전기동 15</div><div>전기동 20 (펄스)</div></td>
-              <td><div>전기동 11</div><div>전기동 14</div><div>전기동 17</div></td>
-              <td><div>전기동 12 <span id="m_tag_elec12" class="badge"></span></div><div>전기동 13</div><div>전기동 21 (펄스)</div></td>
-              <td>-</td>
-              <td>-</td>
-            </tr>
-          </tbody>
-        </table>
+
+      <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:2px;">
+        <button class="btn btn-sub btn-sm" onclick="setQuickTag('스웰러 건욕')">+ 스웰러 건욕</button>
+        <button class="btn btn-sub btn-sm" onclick="setQuickTag('망간 건욕')">+ 망간 건욕</button>
+        <button class="btn btn-sub btn-sm" onclick="setQuickTag('전체건욕')">+ 전체건욕</button>
+        <button class="btn btn-sub btn-sm" onclick="setQuickTag('인써트 교체')">+ 인써트 교체</button>
+        <button class="btn btn-sub btn-sm" onclick="setQuickTag('유산동필터')">+ 유산동필터</button>
+        <button class="btn btn-sub btn-sm" onclick="setQuickTag('설비작업')">+ 설비작업(17시)</button>
+      </div>
+
+      <div id="manualNoteList" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;"></div>
+    </div>
+  </div>
+
+  <!-- [모달 팝업 1: 주간 PM 매트릭스] (에칭 3일 순환 + 데버링/고압수세 통합 + 좌측 빈칸) -->
+  <div id="matrixModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <strong style="font-size: 16px;">🗓️ 주간 정기 PM 매트릭스</strong>
+          <span class="badge badge-blue" id="weekRangeBadge">금주</span>
+        </div>
+        <button class="btn btn-sub btn-sm" onclick="closeModal('matrixModal')">✕ 닫기</button>
+      </div>
+      <div class="modal-body">
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:75px;">공정</th>
+                <th id="th_1">월</th>
+                <th id="th_2">화</th>
+                <th id="th_3">수</th>
+                <th id="th_4">목</th>
+                <th id="th_5">금</th>
+                <th id="th_6" class="weekend-sat-th">토</th>
+                <th id="th_7" class="weekend-th">일</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="background:#fffcf5;">
+                <td style="background:#fafafa;"></td>
+                <td id="etch_cell_1"></td>
+                <td id="etch_cell_2"></td>
+                <td id="etch_cell_3"></td>
+                <td id="etch_cell_4"></td>
+                <td id="etch_cell_5"></td>
+                <td id="etch_cell_6"></td>
+                <td id="etch_cell_7"></td>
+              </tr>
+              <tr>
+                <td style="background:#fafafa;"><strong>디스미어</strong></td>
+                <td>
+                  <div>디스미어 8 <span id="custom_des8"></span></div>
+                  <div>디스미어 11 <span id="tag_w_des11" class="badge"></span> <span id="custom_des11"></span></div>
+                  <div>디스미어 15 <span id="tag_w_des15" class="badge"></span> <span id="custom_des15"></span></div>
+                </td>
+                <td>
+                  <div>디스미어 9 <span id="custom_des9"></span></div>
+                  <div>디스미어 6 <span id="custom_des6"></span></div>
+                </td>
+                <td>
+                  <div>디스미어 12 <span id="custom_des12"></span></div>
+                </td>
+                <td>
+                  <div>디스미어 7 <span id="custom_des7"></span></div>
+                </td>
+                <td>
+                  <div>디스미어 10 <span id="custom_des10"></span></div>
+                </td>
+                <td>-</td>
+                <td>-</td>
+              </tr>
+              <tr style="background:#f0fdf4;">
+                <td><strong style="color:var(--accent);">일반 화학동</strong><br><span style="font-size:10px; color:var(--text-secondary);">(72H 주기)</span></td>
+                <td><div id="chem_cell_1">-</div></td>
+                <td><div id="chem_cell_2">-</div></td>
+                <td><div id="chem_cell_3">-</div></td>
+                <td><div id="chem_cell_4">-</div></td>
+                <td><div id="chem_cell_5">-</div></td>
+                <td><div id="chem_cell_6">-</div></td>
+                <td><div id="chem_cell_7">-</div></td>
+              </tr>
+              <tr style="background:#faf5ff;">
+                <td><strong style="color:var(--purple);">블랙홀</strong><br><span style="font-size:10px; color:var(--text-secondary);">(7일 고정)</span></td>
+                <td><div><span class="badge badge-purple">화12 정기PM</span> <span id="custom_화12"></span></div></td>
+                <td>-</td>
+                <td><div><span class="badge badge-purple">화11 정기PM</span> <span id="custom_화11"></span></div></td>
+                <td>-</td>
+                <td><div><span class="badge badge-purple">화10 정기PM</span> <span id="custom_화10"></span></div></td>
+                <td>-</td>
+                <td>-</td>
+              </tr>
+              <tr>
+                <td style="background:#fafafa;"><strong>전기동</strong></td>
+                <td>
+                  <div>전기동 9 <span id="custom_전9"></span></div>
+                  <div>전기동 16 <span id="custom_전16"></span></div>
+                </td>
+                <td>
+                  <div>전기동 18 <span id="custom_전18"></span></div>
+                  <div>전기동 22 <span id="custom_전22"></span></div>
+                </td>
+                <td>
+                  <div>전기동 15 <span id="custom_전15"></span></div>
+                  <div>전기동 20 <span id="custom_전20"></span></div>
+                </td>
+                <td>
+                  <div>전기동 11 <span id="custom_전11"></span></div>
+                  <div>전기동 14 <span id="custom_전14"></span></div>
+                  <div>전기동 17 <span id="custom_전17"></span></div>
+                </td>
+                <td>
+                  <div>전기동 12 <span id="tag_w_elec12" class="badge"></span> <span id="custom_전12"></span></div>
+                  <div>전기동 13 <span id="custom_전13"></span></div>
+                  <div>전기동 21 <span id="custom_전21"></span></div>
+                </td>
+                <td>-</td>
+                <td>-</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- [탭 3] 주기 설정 (연도 제거, 0분/30분 단위) -->
-  <div id="tabCycle" class="tab-pane">
-    <div style="display:grid; grid-template-columns:1fr; gap:14px;">
-      <div class="card">
-        <div class="card-header">
-          <span>🧪 화학동 주기 설정 (년도 고정 / 00분·30분 단위)</span>
-          <button class="btn btn-sm" onclick="saveCycles()">설정 저장 및 동기화</button>
+  <!-- [모달 팝업 2: 액퍼내기 120일] -->
+  <div id="pulseModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <strong style="font-size: 16px;">💧 펄스라인 액퍼내기 예정일 관리 (120일 주기)</strong>
+        <button class="btn btn-sub btn-sm" onclick="closeModal('pulseModal')">✕ 닫기</button>
+      </div>
+      <div class="modal-body">
+        <div style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 12px; color: var(--text-secondary);">4주(28일) 전 진입 시 리마인드 알림이 자동 점등됩니다.</span>
+          <button class="btn btn-sm" onclick="syncDataToFirebase()">동기화 저장</button>
         </div>
         <div class="table-responsive">
           <table>
             <thead>
               <tr>
-                <th style="width:70px;">라인</th>
-                <th style="width:90px;">상태</th>
-                <th style="width:280px;">작업 일시 (월-일 시:분)</th>
-                <th style="width:160px;">차기 PM 예정 (+72H)</th>
-                <th>비고</th>
+                <th>라인명</th>
+                <th>최근 작업일</th>
+                <th>1차 (+120일)</th>
+                <th>2차 (+240일)</th>
+                <th>3차 (+360일)</th>
+                <th>상태 (D-Day)</th>
               </tr>
             </thead>
-            <tbody id="chemSettingTableBody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <span>💧 펄스라인 액퍼내기 관리 (120일)</span>
-          <button class="btn btn-sm" onclick="saveCycles()">설정 저장 및 동기화</button>
-        </div>
-        <div class="table-responsive">
-          <table>
-            <thead>
-              <tr>
-                <th>라인</th>
-                <th style="width:180px;">최근 작업일 (월-일)</th>
-                <th>차기 예정일 (1차)</th>
-                <th>D-Day 상태</th>
-              </tr>
-            </thead>
-            <tbody id="pulseSettingTableBody"></tbody>
+            <tbody id="pulseTableBody"></tbody>
           </table>
         </div>
       </div>
     </div>
   </div>
+
 </div>
 
 <script>
@@ -543,12 +739,25 @@ const firebaseConfig = {
 let db = null;
 let isFirebaseConnected = false;
 
-// 1번 요청 이미지 데이터 정합
+function escapeHtml(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function ensureArray(data, defaultVal) {
+  if (!data) return defaultVal;
+  if (Array.isArray(data)) return data;
+  if (typeof data === 'object') return Object.values(data);
+  return defaultVal;
+}
+function ensureObject(data) {
+  return (data && typeof data === 'object' && !Array.isArray(data)) ? data : {};
+}
+
 const DEFAULT_CHEM = [
-  { id: '화7', lastDone: '2026-09-25T16:00', status: '완료', note: '0시PM중' },
+  { id: '화7', lastDone: '2026-09-25T00:00', status: '시작', note: '0시PM' },
   { id: '화8', lastDone: '2026-09-23T18:30', status: '완료', note: '' },
   { id: '화9', lastDone: '2026-09-24T19:30', status: '완료', note: '' },
-  { id: '화13', lastDone: '2026-09-25T13:00', status: '시작', note: '13시 촉매건욕' },
+  { id: '화13', lastDone: '2026-09-22T13:00', status: '완료', note: '13시 촉매건욕' },
   { id: '화14', lastDone: '2026-09-24T15:00', status: '완료', note: '' }
 ];
 
@@ -559,43 +768,520 @@ const DEFAULT_PULSE = [
   { line: 'MSF 전기동', lastDate: '2026-08-10' }
 ];
 
+const DEFAULT_MANUAL_NOTES = [];
+
 const ANCHOR_BIWEEK = {
   des11: new Date('2026-09-14T00:00:00'),
   elec12: new Date('2026-09-18T00:00:00'),
   wash1: new Date('2026-09-28T00:00:00')
 };
 
-// 기본 전기동 유형 프리셋 (금요일 전13, 전21은 탈지 산세 박리건욕, 나머지는 산세.박리 기본)
-const DEFAULT_ELEC_PRESETS = {
-  '전기동 9': { type: '탈지 산세 박리건욕', pass: '7시패스' },
-  '전기동 16': { type: '유산동', pass: '7시패스' },
-  '전기동 18': { type: '산세.박리', pass: '7시패스' },
-  '전기동 22': { type: '산세.박리', pass: '7시패스' },
-  '전기동 15': { type: '산세.박리', pass: '7시패스' },
-  '전기동 20': { type: '산세.박리', pass: '7시패스' },
-  '전기동 11': { type: '산세.박리', pass: '7시패스' },
-  '전기동 14': { type: '유산동', pass: '7시패스' },
-  '전기동 17': { type: '유산동', pass: '7시패스' },
-  '전기동 12': { type: '유산동', pass: '7시패스' },
-  '전기동 13': { type: '탈지 산세 박리건욕', pass: '7시패스' },
-  '전기동 21': { type: '탈지 산세 박리건욕', pass: '7시30분패스' }
-};
+let chemList = ensureArray(JSON.parse(localStorage.getItem('chem_data_v34')), DEFAULT_CHEM);
+let pulseList = ensureArray(JSON.parse(localStorage.getItem('pulse_data_v34')), DEFAULT_PULSE);
+let manualNotes = ensureArray(JSON.parse(localStorage.getItem('manual_notes_v34')), DEFAULT_MANUAL_NOTES);
+let equipWorkFlags = ensureObject(JSON.parse(localStorage.getItem('equip_work_flags_v34')));
 
-let chemList = JSON.parse(localStorage.getItem('chem_data_v28')) || DEFAULT_CHEM;
-let pulseList = JSON.parse(localStorage.getItem('pulse_data_v28')) || DEFAULT_PULSE;
-let manualNotes = JSON.parse(localStorage.getItem('manual_notes_v28')) || [];
-let elecCustomTypes = JSON.parse(localStorage.getItem('elec_custom_types_v28')) || {};
+let elecDummyFlags = ensureObject(JSON.parse(localStorage.getItem('elec_dummy_flags_v34')));
+let pulseProcessFlags = ensureObject(JSON.parse(localStorage.getItem('pulse_process_flags_v34')));
+let elecCompletedFlags = ensureObject(JSON.parse(localStorage.getItem('elec_completed_flags_v34')));
 
-let currentDate = new Date('2026-09-25T00:00:00');
+let selectedDateStr = '2026-09-25';
+let lastCheckedDate = '';
+let currentDateChoice = 'today';
 
-function formatDateOnly(d) {
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+// 365일 무한 루프 에칭 계산 (2026-09-25 금 = '에3.4' 기준 3일 주기 순환)
+function getEtchingLine(dateObj) {
+  const anchor = new Date('2026-09-25T00:00:00');
+  const d = new Date(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate());
+  const diffDays = Math.round((d.getTime() - anchor.getTime()) / 86400000);
+  const cycle = ['에1.2', '에3.4', '에6'];
+  let idx = (1 + diffDays) % 3;
+  if (idx < 0) idx += 3;
+  return cycle[idx];
 }
 
-function formatTimeKr(h, m) {
-  h = Number(h); m = Number(m);
+function initFirebase() {
+  const statusEl = document.getElementById('syncStatus');
+  try {
+    if (typeof firebase !== 'undefined') {
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+      }
+      db = firebase.database();
+
+      db.ref('.info/connected').on('value', (snap) => {
+        if (snap.val() === true) {
+          isFirebaseConnected = true;
+          if (statusEl) statusEl.innerHTML = `<span style="color:#16a34a;">🟢 실시간 서버 연결됨</span>`;
+        } else {
+          isFirebaseConnected = false;
+          if (statusEl) statusEl.innerHTML = `<span style="color:#dc2626;">🔴 오프라인 (재연결 시도)</span>`;
+        }
+      });
+
+      db.ref('pm_system_data').on('value', (snapshot) => {
+        const remoteData = snapshot.val();
+        if (remoteData) {
+          if (remoteData.chemList) chemList = ensureArray(remoteData.chemList, DEFAULT_CHEM);
+          if (remoteData.pulseList) pulseList = ensureArray(remoteData.pulseList, DEFAULT_PULSE);
+          if (remoteData.manualNotes) manualNotes = ensureArray(remoteData.manualNotes, DEFAULT_MANUAL_NOTES);
+          if (remoteData.equipWorkFlags) equipWorkFlags = ensureObject(remoteData.equipWorkFlags);
+          if (remoteData.elecDummyFlags) elecDummyFlags = ensureObject(remoteData.elecDummyFlags);
+          if (remoteData.pulseProcessFlags) pulseProcessFlags = ensureObject(remoteData.pulseProcessFlags);
+          if (remoteData.elecCompletedFlags) elecCompletedFlags = ensureObject(remoteData.elecCompletedFlags);
+
+          safeRenderAll();
+        } else {
+          syncDataToFirebase();
+        }
+      });
+    } else {
+      if (statusEl) statusEl.innerHTML = `<span style="color:#d97706;">⚠️ 로컬 저장 모드</span>`;
+    }
+  } catch (e) {
+    console.error("Firebase Init Error:", e);
+    if (statusEl) statusEl.innerHTML = `<span style="color:#d97706;">⚠️ 로컬 저장 모드</span>`;
+  }
+}
+
+function syncDataToFirebase() {
+  localStorage.setItem('chem_data_v34', JSON.stringify(chemList));
+  localStorage.setItem('pulse_data_v34', JSON.stringify(pulseList));
+  localStorage.setItem('manual_notes_v34', JSON.stringify(manualNotes));
+  localStorage.setItem('equip_work_flags_v34', JSON.stringify(equipWorkFlags));
+  localStorage.setItem('elec_dummy_flags_v34', JSON.stringify(elecDummyFlags));
+  localStorage.setItem('pulse_process_flags_v34', JSON.stringify(pulseProcessFlags));
+  localStorage.setItem('elec_completed_flags_v34', JSON.stringify(elecCompletedFlags));
+
+  if (db && isFirebaseConnected) {
+    db.ref('pm_system_data').set({
+      chemList: chemList,
+      pulseList: pulseList,
+      manualNotes: manualNotes,
+      equipWorkFlags: equipWorkFlags,
+      elecDummyFlags: elecDummyFlags,
+      pulseProcessFlags: pulseProcessFlags,
+      elecCompletedFlags: elecCompletedFlags,
+      lastUpdated: new Date().toISOString()
+    }).catch(err => console.error("Firebase sync error:", err));
+  }
+}
+
+function formatTimeKr(hour, min) {
+  const h = Number(hour);
+  const m = Number(min);
+  if (isNaN(h)) return '';
   if (isNaN(m) || m === 0) return `${h}시`;
-  return `${h}시 ${String(m).padStart(2,'0')}분`;
+  return `${h}시 ${String(m).padStart(2, '0')}분`;
+}
+
+function formatDateTimeKr(d) {
+  if (isNaN(d.getTime())) return '-';
+  const M = d.getMonth() + 1;
+  const D = d.getDate();
+  const h = d.getHours();
+  const m = d.getMinutes();
+  return `${M}월 ${D}일 ${formatTimeKr(h, m)}`;
+}
+
+function formatDateOnly(d) {
+  if (isNaN(d.getTime())) return '-';
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function openModal(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = 'flex';
+}
+function closeModal(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = 'none';
+}
+
+function updateDateToggleUI() {
+  const btnToday = document.getElementById('btnDateToday');
+  const btnTomorrow = document.getElementById('btnDateTomorrow');
+  if (!btnToday || !btnTomorrow) return;
+  if (currentDateChoice === 'tomorrow') {
+    btnToday.className = 'btn btn-sub btn-sm';
+    btnTomorrow.className = 'btn btn-sm';
+  } else {
+    btnToday.className = 'btn btn-sm';
+    btnTomorrow.className = 'btn btn-sub btn-sm';
+  }
+}
+
+function selectQuickDay(choice) {
+  currentDateChoice = choice;
+  const now = new Date();
+  const target = new Date(now);
+  if (choice === 'tomorrow') {
+    target.setDate(target.getDate() + 1);
+  }
+  selectedDateStr = formatDateOnly(target);
+  updateDateToggleUI();
+  safeRenderAll();
+}
+
+function renderTab1ChemStatus() {
+  const container = document.getElementById('tab1ChemStatusContainer');
+  if (!container) return;
+
+  const targetIds = ['화7', '화8', '화9', '화13', '화14'];
+  let html = '';
+
+  targetIds.forEach(id => {
+    const line = chemList.find(c => c.id === id);
+    if (!line) return;
+
+    const t = new Date(line.lastDone);
+    const isRunning = (line.status === '시작');
+
+    if (isRunning) {
+      const startKr = formatDateTimeKr(t);
+      html += `
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 9px 10px; font-size: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <strong style="color: var(--text-primary); font-size: 13.5px;">${escapeHtml(line.id)}</strong>
+            <span class="badge badge-green">PM 진행중</span>
+          </div>
+          <div style="color: var(--text-secondary); font-size: 11px;">PM 시작 시각:</div>
+          <div style="font-weight: 800; color: #15803d; font-size: 12px; margin-top: 1px;">${startKr}</div>
+        </div>
+      `;
+    } else {
+      const nextDue = new Date(t.getTime() + 72 * 3600000);
+      const dueKr = formatDateTimeKr(nextDue);
+      const isOverdue = new Date() >= nextDue;
+      html += `
+        <div style="background: ${isOverdue ? '#fffbeb' : '#f8fafc'}; border: 1px solid ${isOverdue ? '#fde68a' : '#e2e8f0'}; border-radius: 6px; padding: 9px 10px; font-size: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <strong style="color: var(--text-primary); font-size: 13.5px;">${escapeHtml(line.id)}</strong>
+            <span class="badge ${isOverdue ? 'badge-yellow' : 'badge-sub'}">${isOverdue ? '주기도래' : '완료'}</span>
+          </div>
+          <div style="color: var(--text-secondary); font-size: 11px;">차기 PM 예정:</div>
+          <div style="font-weight: 800; color: ${isOverdue ? 'var(--warning)' : 'var(--accent)'}; font-size: 12px; margin-top: 1px;">${dueKr}</div>
+        </div>
+      `;
+    }
+  });
+
+  container.innerHTML = html;
+}
+
+function parseAndApplyKakaoMsg() {
+  const raw = document.getElementById('kakaoRawInput').value.trim();
+  if (!raw) {
+    alert('카카오톡 PM 공지 내용을 붙여넣어 주세요.');
+    return;
+  }
+
+  let updatedCount = 0;
+  const processedChems = new Set();
+
+  const dateMatch = raw.match(/(\d{1,2})월\s*(\d{1,2})일/);
+  if (dateMatch) {
+    const curYear = new Date().getFullYear();
+    const m = dateMatch[1].padStart(2, '0');
+    const d = dateMatch[2].padStart(2, '0');
+    selectedDateStr = `${curYear}-${m}-${d}`;
+    const todayStr = formatDateOnly(new Date());
+    currentDateChoice = (selectedDateStr === todayStr) ? 'today' : 'custom';
+    updateDateToggleUI();
+    updatedCount++;
+  }
+
+  const passMatch = raw.match(/(\d{1,2}시(?:\s*\d{1,2}분)?\s*패스)/);
+  if (passMatch) {
+    const el = document.getElementById('passTimeInput');
+    if (el) el.value = passMatch[1].replace(/\s+/g, '');
+    updatedCount++;
+  }
+
+  const lines = raw.split('\n');
+  lines.forEach(lineText => {
+    ['화7', '화8', '화9', '화13', '화14'].forEach(cid => {
+      if (processedChems.has(cid)) return;
+
+      const regex = new RegExp(`(^|[^가-힣a-zA-Z0-9])${cid}([^가-힣a-zA-Z0-9]|$)`);
+      if (regex.test(lineText)) {
+        const item = chemList.find(c => c.id === cid);
+        if (!item) return;
+
+        const timeMatch = lineText.match(/(\d{1,2})시(?:\s*(\d{1,2})분)?/);
+        if (timeMatch) {
+          const hh = timeMatch[1].padStart(2, '0');
+          const mm = timeMatch[2] ? (Number(timeMatch[2]) >= 30 ? '30' : '00') : '00';
+          
+          const isOngoing = lineText.includes('진행중') || lineText.includes('PM중') || lineText.includes('시작');
+          
+          if (isOngoing) {
+            item.status = '시작';
+            item.lastDone = `${selectedDateStr}T${hh}:${mm}`;
+          } else {
+            item.status = '완료';
+            const scheduledTime = new Date(`${selectedDateStr}T${hh}:${mm}:00`);
+            const calculatedLastDone = new Date(scheduledTime.getTime() - 72 * 3600000);
+            
+            const cY = calculatedLastDone.getFullYear();
+            const cM = String(calculatedLastDone.getMonth() + 1).padStart(2, '0');
+            const cD = String(calculatedLastDone.getDate()).padStart(2, '0');
+            const cH = String(calculatedLastDone.getHours()).padStart(2, '0');
+            const cMin = calculatedLastDone.getMinutes() >= 30 ? '30' : '00';
+            
+            item.lastDone = `${cY}-${cM}-${cD}T${cH}:${cMin}`;
+          }
+
+          if (lineText.includes('촉매건욕')) item.note = '촉매건욕';
+          else if (lineText.includes('화학동 건욕')) item.note = '화학동 건욕';
+
+          processedChems.add(cid);
+          updatedCount++;
+        }
+      }
+    });
+  });
+
+  syncDataToFirebase();
+  safeRenderAll();
+  alert(`✅ 카톡 공지 분석 완료!\n총 ${updatedCount}개의 일정이 실시간 동기화되었습니다.`);
+  document.getElementById('kakaoRawInput').value = '';
+}
+
+function safeRenderAll() {
+  try { generateShareText(); } catch(e){}
+  try { renderTab1ChemStatus(); } catch(e){}
+  try { renderWeeklyMatrix(); } catch(e){}
+  try { renderManualNotesList(); } catch(e){}
+  try { renderChemList(); } catch(e){}
+  try { renderPulseTable(); } catch(e){}
+  try { renderActiveChemGauges(new Date()); } catch(e){}
+  try { renderElectroGauges(new Date()); } catch(e){}
+}
+
+window.onload = function() {
+  const today = new Date();
+  selectedDateStr = formatDateOnly(today);
+  lastCheckedDate = selectedDateStr;
+  currentDateChoice = 'today';
+  
+  const mM = document.getElementById('manualMonthInput');
+  const mD = document.getElementById('manualDayInput');
+  if (mM) mM.value = today.getMonth() + 1;
+  if (mD) mD.value = today.getDate();
+
+  initFirebase();
+  updateDateToggleUI();
+  safeRenderAll();
+
+  tick();
+  setInterval(tick, 1000);
+};
+
+function tick() {
+  const now = new Date();
+  const clockEl = document.getElementById('liveClock');
+  if (clockEl) clockEl.innerText = formatClock(now);
+
+  try { updateLiveTimesOnly(now); } catch(e) {}
+  try { updateChemRealtimeStatuses(); } catch(e) {}
+
+  const currentTodayStr = formatDateOnly(now);
+  if (lastCheckedDate !== currentTodayStr) {
+    lastCheckedDate = currentTodayStr;
+    if (currentDateChoice === 'today') {
+      selectedDateStr = currentTodayStr;
+    } else if (currentDateChoice === 'tomorrow') {
+      const tmr = new Date(now);
+      tmr.setDate(tmr.getDate() + 1);
+      selectedDateStr = formatDateOnly(tmr);
+    }
+    const mM = document.getElementById('manualMonthInput');
+    const mD = document.getElementById('manualDayInput');
+    if (mM) mM.value = now.getMonth() + 1;
+    if (mD) mD.value = now.getDate();
+    safeRenderAll();
+  }
+}
+
+function formatClock(d) {
+  const M = String(d.getMonth() + 1).padStart(2, '0');
+  const D = String(d.getDate()).padStart(2, '0');
+  const h = String(d.getHours()).padStart(2, '0');
+  const m = String(d.getMinutes()).padStart(2, '0');
+  const s = String(d.getSeconds()).padStart(2, '0');
+  return `${M}/${D} ${h}:${m}:${s}`;
+}
+
+function switchTab(t) {
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+
+  const btnMap = {
+    'tab1': 'tabBtn1',
+    'tab2': 'tabBtn2',
+    'tab3': 'tabBtn3',
+    'tab4': 'tabBtn4'
+  };
+
+  if (document.getElementById(btnMap[t])) document.getElementById(btnMap[t]).classList.add('active');
+  if (document.getElementById(t)) document.getElementById(t).classList.add('active');
+
+  const now = new Date();
+  if (t === 'tab1') {
+    generateShareText();
+    renderTab1ChemStatus();
+  }
+  else if (t === 'tab2') {
+    renderActiveChemGauges(now);
+    renderElectroGauges(now);
+  }
+  else if (t === 'tab3') renderChemList();
+  else if (t === 'tab4') renderManualNotesList();
+}
+
+function renderWeeklyMatrix() {
+  const targetDate = new Date(selectedDateStr + 'T00:00:00');
+  const currentDay = targetDate.getDay();
+
+  const diffToMon = (currentDay === 0 ? -6 : 1 - currentDay);
+  const monday = new Date(targetDate.getTime() + diffToMon * 86400000);
+
+  const weekDates = [];
+  const dayNames = ['월', '화', '수', '목', '금', '토', '일'];
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(monday.getTime() + i * 86400000);
+    const dateStr = formatDateOnly(d);
+    weekDates.push({ date: d, dateStr: dateStr });
+
+    const th = document.getElementById(`th_${i+1}`);
+    if (th) {
+      th.innerHTML = `${dayNames[i]} <span style="font-size:10.5px; font-weight:normal; opacity:0.85;">(${d.getMonth()+1}/${d.getDate()})</span>`;
+      th.className = (dateStr === selectedDateStr) ? 'today-col' : (i === 5 ? 'weekend-sat-th' : (i === 6 ? 'weekend-th' : ''));
+      th.style.cursor = 'pointer';
+      th.onclick = () => selectDayFromMatrix(dateStr);
+    }
+  }
+
+  const badge = document.getElementById('weekRangeBadge');
+  if (badge) {
+    badge.innerText = `${monday.getMonth()+1}/${monday.getDate()} ~ ${weekDates[6].date.getMonth()+1}/${weekDates[6].date.getDate()}`;
+  }
+
+  // 에칭 365일 무한 루프 + 고압수세/데버링 원복 배치
+  for (let i = 0; i < 7; i++) {
+    const d = weekDates[i].date;
+    const etchLine = getEtchingLine(d);
+    const cell = document.getElementById(`etch_cell_${i+1}`);
+    if (cell) {
+      let extraHtml = '';
+      if (i === 0) { // 월
+        extraHtml += `<div>고압수세 1 <span id="tag_w_wash1" class="badge"></span> <span id="custom_wash1"></span></div>`;
+      } else if (i === 2) { // 수
+        extraHtml += `<div><strong>데버링 3</strong> <span id="custom_deb3"></span></div>`;
+      } else if (i === 4) { // 금
+        extraHtml += `<div><strong>데버링 2</strong> <span id="custom_deb2"></span></div>`;
+      }
+      cell.innerHTML = `<div><strong>${etchLine}</strong> <span id="custom_etch_${i+1}"></span></div>` + extraHtml;
+    }
+  }
+
+  setTag('tag_w_des11', checkBiWeek(ANCHOR_BIWEEK.des11, targetDate));
+  setTag('tag_w_des15', checkBiWeek(ANCHOR_BIWEEK.des11, targetDate));
+  setTag('tag_w_elec12', checkBiWeek(ANCHOR_BIWEEK.elec12, targetDate));
+  setTag('tag_w_wash1', checkBiWeek(ANCHOR_BIWEEK.wash1, targetDate));
+
+  for (let i = 0; i < 7; i++) {
+    const dStr = weekDates[i].dateStr;
+    const cell = document.getElementById(`chem_cell_${i+1}`);
+    if (!cell) continue;
+    cell.innerHTML = '';
+    let matches = [];
+
+    chemList.forEach(c => {
+      const base = new Date(c.lastDone);
+      if (!isNaN(base.getTime())) {
+        const nextDue = new Date(base.getTime() + 72 * 3600000);
+        if (formatDateOnly(nextDue) === dStr) {
+          const timeKr = formatTimeKr(nextDue.getHours(), nextDue.getMinutes());
+          matches.push(`<strong>${escapeHtml(c.id)}</strong> <span style="color:var(--accent);">(${timeKr})</span>`);
+        }
+      }
+    });
+
+    cell.innerHTML = matches.length > 0 ? matches.join('<br>') : '<span style="color:#94a3b8;">-</span>';
+  }
+
+  renderManualNotesInMatrix(weekDates);
+}
+
+function selectDayFromMatrix(dateStr) {
+  selectedDateStr = dateStr;
+  const now = new Date();
+  const tmr = new Date(now);
+  tmr.setDate(tmr.getDate() + 1);
+
+  if (dateStr === formatDateOnly(now)) currentDateChoice = 'today';
+  else if (dateStr === formatDateOnly(tmr)) currentDateChoice = 'tomorrow';
+  else currentDateChoice = 'custom';
+  updateDateToggleUI();
+
+  renderWeeklyMatrix();
+  generateShareText();
+  renderElectroGauges(new Date());
+  renderTab1ChemStatus();
+  closeModal('matrixModal');
+}
+
+function renderManualNotesInMatrix(weekDates) {
+  document.querySelectorAll('[id^="custom_"]').forEach(el => el.innerHTML = '');
+
+  manualNotes.forEach(item => {
+    const isInWeek = weekDates.some(w => w.dateStr === item.date);
+    if (!isInWeek) return;
+
+    let targetId = '';
+    const l = item.line;
+    if (l.includes('고압수세 1') || l.includes('고압수세1')) targetId = 'custom_wash1';
+    else if (l.includes('데버링 3') || l.includes('데3')) targetId = 'custom_deb3';
+    else if (l.includes('데버링 2') || l.includes('데2')) targetId = 'custom_deb2';
+    else if (l.includes('디스미어 8') || l === '디8') targetId = 'custom_des8';
+    else if (l.includes('디스미어 10') || l === '디10') targetId = 'custom_des10';
+    else if (l.includes('디스미어 11') || l === '디11') targetId = 'custom_des11';
+    else if (l.includes('디스미어 15') || l === '디15') targetId = 'custom_des15';
+    else if (l.includes('디스미어 9') || l === '디9') targetId = 'custom_des9';
+    else if (l.includes('디스미어 6') || l === '디6') targetId = 'custom_des6';
+    else if (l.includes('디스미어 12') || l === '디12') targetId = 'custom_des12';
+    else if (l.includes('디스미어 7') || l === '디7') targetId = 'custom_des7';
+    else if (l.includes('전기동 9') || l === '전9') targetId = 'custom_전9';
+    else if (l.includes('전기동 11') || l === '전11') targetId = 'custom_전11';
+    else if (l.includes('전기동 12') || l === '전12') targetId = 'custom_전12';
+    else if (l.includes('전기동 13') || l === '전13') targetId = 'custom_전13';
+    else if (l.includes('전기동 14') || l === '전14') targetId = 'custom_전14';
+    else if (l.includes('전기동 15') || l === '전15') targetId = 'custom_전15';
+    else if (l.includes('전기동 16') || l === '전16') targetId = 'custom_전16';
+    else if (l.includes('전기동 17') || l === '전17') targetId = 'custom_전17';
+    else if (l.includes('전기동 18') || l === '전18') targetId = 'custom_전18';
+    else if (l.includes('전기동 20') || l === '전20') targetId = 'custom_전20';
+    else if (l.includes('전기동 21') || l === '전21') targetId = 'custom_전21';
+    else if (l.includes('전기동 22') || l === '전22') targetId = 'custom_전22';
+    else if (l.includes('화12')) targetId = 'custom_화12';
+    else if (l.includes('화11')) targetId = 'custom_화11';
+    else if (l.includes('화10')) targetId = 'custom_화10';
+
+    if (targetId) {
+      const el = document.getElementById(targetId);
+      if (el) el.innerHTML += `<span class="badge badge-custom">${escapeHtml(item.text)}</span>`;
+    }
+  });
+}
+
+function setTag(id, active) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerText = active ? '금주' : '차주';
+  el.className = active ? 'badge badge-green' : 'badge badge-sub';
 }
 
 function getMonday(d) {
@@ -606,423 +1292,1019 @@ function getMonday(d) {
 }
 
 function checkBiWeek(anchorDate, targetDate) {
-  const tMon = getMonday(targetDate);
-  const aMon = getMonday(anchorDate);
-  const diffDays = Math.round((tMon - aMon) / 86400000);
+  const targetMon = getMonday(targetDate);
+  const anchorMon = getMonday(anchorDate);
+  const diffDays = Math.round((targetMon - anchorMon) / 86400000);
   const diffWeeks = Math.round(diffDays / 7);
   return (Math.abs(diffWeeks) % 2 === 0);
 }
 
-function initFirebase() {
-  const statusEl = document.getElementById('syncStatus');
-  try {
-    if (typeof firebase !== 'undefined') {
-      if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-      db = firebase.database();
-
-      db.ref('.info/connected').on('value', snap => {
-        isFirebaseConnected = (snap.val() === true);
-        statusEl.innerHTML = isFirebaseConnected 
-          ? `<span style="color:var(--success);">🟢 클라우드 동기화됨</span>`
-          : `<span style="color:var(--warning);">🟡 로컬 모드</span>`;
-      });
-
-      db.ref('pm_system_data_v28').on('value', snap => {
-        const val = snap.val();
-        if (val) {
-          if (val.chemList) chemList = val.chemList;
-          if (val.pulseList) pulseList = val.pulseList;
-          if (val.manualNotes) manualNotes = val.manualNotes;
-          if (val.elecCustomTypes) elecCustomTypes = val.elecCustomTypes;
-          renderAll();
-        }
-      });
-    }
-  } catch (e) {
-    statusEl.innerHTML = `<span style="color:var(--warning);">🟡 로컬 모드</span>`;
+function checkCustomLineInput(val) {
+  const customInput = document.getElementById('manualCustomLineInput');
+  if (val === 'CUSTOM') {
+    customInput.style.display = 'inline-block';
+    customInput.focus();
+  } else {
+    customInput.style.display = 'none';
   }
 }
 
-function syncToStorage() {
-  localStorage.setItem('chem_data_v28', JSON.stringify(chemList));
-  localStorage.setItem('pulse_data_v28', JSON.stringify(pulseList));
-  localStorage.setItem('manual_notes_v28', JSON.stringify(manualNotes));
-  localStorage.setItem('elec_custom_types_v28', JSON.stringify(elecCustomTypes));
-
-  if (db && isFirebaseConnected) {
-    db.ref('pm_system_data_v28').set({
-      chemList, pulseList, manualNotes, elecCustomTypes,
-      lastUpdated: new Date().toISOString()
-    }).catch(err => console.error("Firebase Sync Error", err));
-  }
-}
-
-function switchTab(t) {
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-
-  if (t === 'report') {
-    document.getElementById('tabBtnReport').classList.add('active');
-    document.getElementById('tabReport').classList.add('active');
-    renderReportTab();
-  } else if (t === 'matrix') {
-    document.getElementById('tabBtnMatrix').classList.add('active');
-    document.getElementById('tabMatrix').classList.add('active');
-    renderMatrixTab();
-  } else if (t === 'cycle') {
-    document.getElementById('tabBtnCycle').classList.add('active');
-    document.getElementById('tabCycle').classList.add('active');
-    renderCycleSettings();
-  }
-}
-
-function shiftDate(delta) {
-  currentDate.setDate(currentDate.getDate() + delta);
-  renderAll();
-}
-
-function setToday() {
-  currentDate = new Date();
-  renderAll();
-}
-
-function selectDate(dateStr) {
-  currentDate = new Date(dateStr + 'T00:00:00');
-  switchTab('report');
-  renderAll();
-}
-
-function renderAll() {
-  updateDateHeader();
-  renderReportTab();
-  renderMatrixTab();
-  renderCycleSettings();
-}
-
-function updateDateHeader() {
-  const days = ['일', '월', '화', '수', '목', '금', '토'];
-  const y = currentDate.getFullYear();
-  const m = currentDate.getMonth() + 1;
-  const d = currentDate.getDate();
-  const dow = days[currentDate.getDay()];
+function addManualNote() {
+  const cur = new Date(selectedDateStr + 'T00:00:00');
+  const y = isNaN(cur.getTime()) ? (new Date()).getFullYear() : cur.getFullYear();
+  const m = document.getElementById('manualMonthInput').value;
+  const d = document.getElementById('manualDayInput').value;
+  const date = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
   
-  document.getElementById('currentDateDisplay').innerText = `${y}년 ${m}월 ${d}일 (${dow})`;
-  document.getElementById('dayOfWeekBadge').innerText = `${dow}요일 PM`;
-}
-
-// 당일 전기동 라인 목록 추출
-function getScheduledElecLines(day, dateObj) {
-  let lines = [];
-  if (day === 1) lines = ['전기동 9', '전기동 16'];
-  else if (day === 2) lines = ['전기동 18', '전기동 22'];
-  else if (day === 3) lines = ['전기동 15', '전기동 20'];
-  else if (day === 4) lines = ['전기동 11', '전기동 14', '전기동 17'];
-  else if (day === 5) {
-    if (checkBiWeek(ANCHOR_BIWEEK.elec12, dateObj)) lines.push('전기동 12');
-    lines.push('전기동 13', '전기동 21');
-  }
-  return lines;
-}
-
-// [메인 리포트 렌더링]
-function renderReportTab() {
-  const day = currentDate.getDay();
-  const curDateStr = formatDateOnly(currentDate);
-
-  const bannerContainer = document.getElementById('alertBannerContainer');
-  bannerContainer.innerHTML = '';
-
-  const hwa8 = chemList.find(c => c.id === '화8');
-  if (hwa8) {
-    const hwa8Done = new Date(hwa8.lastDone);
-    const limit48h = new Date(hwa8Done.getTime() + 48 * 3600000);
-    if (new Date() >= limit48h) {
-      bannerContainer.innerHTML += `
-        <div class="alert-banner warning">
-          ⚠️ <strong>[화8 주의]</strong> 작업 후 48시간이 경과하여 <strong>빌드업 금지</strong> 적용 중입니다.
-        </div>
-      `;
+  let line = document.getElementById('manualLineSelect').value;
+  if (line === 'CUSTOM') {
+    line = document.getElementById('manualCustomLineInput').value.trim();
+    if (!line) {
+      alert('직접 입력할 라인명을 입력해주세요.');
+      return;
     }
   }
 
-  pulseList.forEach(p => {
-    const base = new Date(p.lastDate + 'T00:00:00');
-    const d1 = new Date(base.getTime() + 120 * 86400000);
-    const diff = Math.ceil((d1 - new Date()) / 86400000);
-    if (diff <= 28 && diff > 0) {
-      bannerContainer.innerHTML += `
-        <div class="alert-banner purple">
-          🔔 <strong>[펄스 액퍼내기]</strong> ${p.line} 1차 예정일까지 <strong>D-${diff}</strong> 남았습니다. (${d1.getMonth()+1}/${d1.getDate()} 예정)
-        </div>
-      `;
-    }
-  });
+  const text = document.getElementById('manualContentInput').value.trim();
 
-  const noteContainer = document.getElementById('todayNotesList');
-  noteContainer.innerHTML = '';
-  const todaysNotes = manualNotes.filter(n => n.date === curDateStr);
-  todaysNotes.forEach(n => {
-    noteContainer.innerHTML += `
-      <span class="note-tag">
-        <strong>${n.line}</strong>: ${n.text}
-        <button onclick="deleteNote('${n.id}')">&times;</button>
-      </span>
-    `;
-  });
-
-  renderElecConfigUI(day);
-  renderTodayPills(day, curDateStr);
-  generateReport();
-}
-
-// 3번 요청: 전기동 유형 선택 UI
-function renderElecConfigUI(day) {
-  const container = document.getElementById('todayElecConfigContainer');
-  container.innerHTML = '';
-
-  const curDateStr = formatDateOnly(currentDate);
-  const lines = getScheduledElecLines(day, currentDate);
-
-  if (lines.length === 0) {
-    container.innerHTML = `<span style="font-size:12px; color:var(--text-secondary);">금일 예정된 전기동 PM 라인이 없습니다.</span>`;
+  if (!m || !d || !text) {
+    alert('날짜와 특이사항 내용을 모두 입력해주세요.');
     return;
   }
 
-  const defaultPass = document.getElementById('passTimeInput').value.trim() || '7시패스';
+  manualNotes.push({ date, line, text });
+  syncDataToFirebase();
+  document.getElementById('manualContentInput').value = '';
+  renderManualNotesList();
+  renderWeeklyMatrix();
+  generateShareText();
+  renderElectroGauges(new Date());
+}
 
-  lines.forEach(lineName => {
-    const key = `${curDateStr}_${lineName}`;
-    const preset = DEFAULT_ELEC_PRESETS[lineName] || { type: '산세.박리', pass: defaultPass };
-    const saved = elecCustomTypes[key] || preset;
+function setQuickTag(tag) {
+  document.getElementById('manualContentInput').value = tag;
+}
 
-    const optList = ['산세.박리', '탈지 산세 박리건욕', '산탈지', '프리딥', '유산동필터', '유산동'];
-    let optsHtml = '';
-    optList.forEach(opt => {
-      optsHtml += `<option value="${opt}" ${saved.type === opt ? 'selected' : ''}>${opt}${opt === '산세.박리' ? ' (기본)' : ''}</option>`;
-    });
+function removeManualNote(index) {
+  manualNotes.splice(index, 1);
+  syncDataToFirebase();
+  renderManualNotesList();
+  renderWeeklyMatrix();
+  generateShareText();
+  renderElectroGauges(new Date());
+}
 
-    container.innerHTML += `
-      <div class="elec-type-row">
-        <strong>${lineName}</strong>
-        <div style="display:flex; align-items:center; gap:6px;">
-          <select onchange="updateElecCustomType('${lineName}', 'type', this.value)" style="padding:4px 6px;">
-            ${optsHtml}
-          </select>
-          <input type="text" value="${saved.pass || defaultPass}" style="width:90px; padding:4px 6px;" 
-                 onchange="updateElecCustomType('${lineName}', 'pass', this.value)" placeholder="패스 시간">
+function renderManualNotesList() {
+  const container = document.getElementById('manualNoteList');
+  if (!container) return;
+  container.innerHTML = '';
+  manualNotes.forEach((n, idx) => {
+    const chip = document.createElement('span');
+    chip.className = 'note-chip';
+    chip.innerHTML = `<strong>${escapeHtml(n.date.slice(5))} [${escapeHtml(n.line)}]</strong>: ${escapeHtml(n.text)} <button onclick="removeManualNote(${idx})">&times;</button>`;
+    container.appendChild(chip);
+  });
+}
+
+function updateLiveTimesOnly(now) {
+  chemList.forEach(line => {
+    const isRunning = (line.status === '시작');
+    if (!isRunning) return;
+
+    const bar = document.getElementById(`chem_bar_${line.id}`);
+    const pctBadge = document.getElementById(`chem_pct_${line.id}`);
+    const statusBox = document.getElementById(`chem_status_${line.id}`);
+    if (!bar || !statusBox) return;
+
+    const startTime = new Date(line.lastDone);
+    const elapsedMin = Math.max(0, (now - startTime) / 60000);
+    const target12hMin = 720;
+    const pct = Math.min(100, (elapsedMin / target12hMin) * 100);
+    const elapsedH = (elapsedMin / 60).toFixed(1);
+
+    bar.style.width = pct.toFixed(1) + '%';
+    if (pctBadge) pctBadge.innerText = `${pct.toFixed(0)}%`;
+
+    if (elapsedMin < target12hMin) {
+      const remainMin = Math.ceil(target12hMin - elapsedMin);
+      const rH = Math.floor(remainMin / 60);
+      const rM = remainMin % 60;
+      statusBox.innerHTML = `
+        <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:4px;">
+          <span>진척 상태: <strong>C/S 세척 및 준비 구간</strong> (경과: <strong>${elapsedH}시간</strong>)</span>
+          <strong style="color:var(--danger);">액이송(12H)까지 ${rH > 0 ? rH + '시간 ' : ''}${rM}분 남음</strong>
+        </div>
+        <div>💡 하단의 C/S 세척 기준에 맞춰 작업 진행 ➔ <strong>12시간 도래 시 액이송 시작</strong></div>
+      `;
+    } else if (elapsedMin >= target12hMin && elapsedMin < 840) {
+      const to14hMin = Math.max(0, Math.ceil(840 - elapsedMin));
+      statusBox.innerHTML = `
+        <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:4px;">
+          <strong style="color:var(--danger);">🚨 [12시간 경과] 액이송 시작 시점!</strong>
+          <span>경과: <strong>${elapsedH}시간</strong></span>
+        </div>
+        <div>작업: <strong>액이송 시작 ➔ 더미 투입 ➔ 분석기 3.0 도달 시 분석 의뢰 ➔ 시편 확인</strong> (${to14hMin}분 남음)</div>
+      `;
+    } else {
+      statusBox.innerHTML = `
+        <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:4px;">
+          <span style="color:var(--success); font-weight:700;">✅ 14시간 경과 - 양산 가동 가능</span>
+          <span>경과: <strong>${elapsedH}시간</strong></span>
+        </div>
+        <div>상태: 시편 이상 없음 확인 후 양산 진행 | PM 종료 시 <strong>[완료]</strong> 버튼을 눌러주세요.</div>
+      `;
+    }
+  });
+
+  const day = new Date(selectedDateStr + 'T00:00:00').getDay();
+  let todayElecLines = [];
+  if (day === 1) todayElecLines = [{ name: '전기동 9라인', isPulse: true }, { name: '전기동 16라인', isPulse: false }];
+  else if (day === 2) todayElecLines = [{ name: '전기동 18라인', isPulse: false }, { name: '전기동 22라인', isPulse: false }];
+  else if (day === 3) todayElecLines = [{ name: '전기동 15라인', isPulse: false }, { name: '전기동 20라인', isPulse: true }];
+  else if (day === 4) todayElecLines = [{ name: '전기동 11라인', isPulse: false }, { name: '전기동 14라인', isPulse: false }, { name: '전기동 17라인', isPulse: false }];
+  else if (day === 5) todayElecLines = [{ name: '전기동 13라인', isPulse: false }, { name: '전기동 21라인', isPulse: true }];
+  else todayElecLines = [{ name: '전기동 13라인', isPulse: false }, { name: '전기동 21라인', isPulse: true }];
+
+  todayElecLines.forEach(line => {
+    const isCompleted = !!elecCompletedFlags[selectedDateStr + '_' + line.name];
+    if (isCompleted) return;
+
+    if (line.isPulse) {
+      const pData = pulseProcessFlags[line.name];
+      const box = document.getElementById(`pulse_status_detail_${line.name}`);
+      const bar = document.getElementById(`pulse_bar_${line.name}`);
+      const pctBadge = document.getElementById(`pulse_pct_${line.name}`);
+      if (!box || !bar || !pData || !pData.isStarted) return;
+
+      const curH = pData.h !== undefined ? pData.h : 14;
+      const curM = pData.m !== undefined ? pData.m : 0;
+      
+      const baseD = new Date(selectedDateStr + 'T00:00:00');
+      const t0 = new Date(baseD.getFullYear(), baseD.getMonth(), baseD.getDate(), curH, curM, 0);
+
+      const t1 = new Date(t0.getTime() + 90 * 60000);
+      const t2 = new Date(t1.getTime() + 90 * 60000);
+      const t3 = new Date(t2.getTime() + 90 * 60000);
+      const t4 = new Date(t3.getTime() + 90 * 60000);
+
+      const totalElapsedMin = Math.max(0, (now - t0) / 60000);
+      const totalPct = Math.min(100, Math.max(0, (totalElapsedMin / 360) * 100));
+      bar.style.width = totalPct.toFixed(1) + '%';
+      if (pctBadge) pctBadge.innerText = `${totalPct.toFixed(0)}%`;
+
+      let remainMinStep = 0;
+      let currentStepName = '';
+
+      const s1 = document.getElementById(`pulse_step_${line.name}_1`);
+      const s2 = document.getElementById(`pulse_step_${line.name}_2`);
+      const s3 = document.getElementById(`pulse_step_${line.name}_3`);
+      const s4 = document.getElementById(`pulse_step_${line.name}_4`);
+
+      if (now < t0) {
+        currentStepName = '0.5 DC 더미 대기 중';
+        remainMinStep = Math.ceil((t0 - now) / 60000);
+        if (s1) s1.className = 'pulse-step-item';
+        if (s2) s2.className = 'pulse-step-item';
+        if (s3) s3.className = 'pulse-step-item';
+        if (s4) s4.className = 'pulse-step-item';
+      } else if (now >= t0 && now < t1) {
+        currentStepName = '0.5 DC 더미';
+        remainMinStep = Math.ceil((t1 - now) / 60000);
+        if (s1) s1.className = 'pulse-step-item active';
+        if (s2) s2.className = 'pulse-step-item';
+        if (s3) s3.className = 'pulse-step-item';
+        if (s4) s4.className = 'pulse-step-item';
+      } else if (now >= t1 && now < t2) {
+        currentStepName = '1.5 DC 더미';
+        remainMinStep = Math.ceil((t2 - now) / 60000);
+        if (s1) s1.className = 'pulse-step-item done';
+        if (s2) s2.className = 'pulse-step-item active';
+        if (s3) s3.className = 'pulse-step-item';
+        if (s4) s4.className = 'pulse-step-item';
+      } else if (now >= t2 && now < t3) {
+        currentStepName = '펄스대비 패스';
+        remainMinStep = Math.ceil((t3 - now) / 60000);
+        if (s1) s1.className = 'pulse-step-item done';
+        if (s2) s2.className = 'pulse-step-item done';
+        if (s3) s3.className = 'pulse-step-item active';
+        if (s4) s4.className = 'pulse-step-item';
+      } else if (now >= t3 && now < t4) {
+        currentStepName = '펄스 더미';
+        remainMinStep = Math.ceil((t4 - now) / 60000);
+        if (s1) s1.className = 'pulse-step-item done';
+        if (s2) s2.className = 'pulse-step-item done';
+        if (s3) s3.className = 'pulse-step-item done';
+        if (s4) s4.className = 'pulse-step-item active';
+      } else {
+        currentStepName = '광 확인 및 양산 가동';
+        remainMinStep = 0;
+        if (s1) s1.className = 'pulse-step-item done';
+        if (s2) s2.className = 'pulse-step-item done';
+        if (s3) s3.className = 'pulse-step-item done';
+        if (s4) s4.className = 'pulse-step-item done';
+      }
+
+      box.innerHTML = `
+        <div style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:4px;">
+          <span>현재 진행: <strong style="color:var(--purple);">[${currentStepName}]</strong></span>
+          <strong>${remainMinStep > 0 ? `다음 단계까지 약 ${remainMinStep}분 남음` : '전체 4단계 완료'}</strong>
+        </div>
+        <div style="font-size:11.5px; color:var(--text-secondary); margin-top:2px;">
+          ⏱️ <strong>단계별 자동 일정:</strong> 0.5 DC(${formatTimeKr(t1.getHours(), t1.getMinutes())}) ➔ 1.5 DC(${formatTimeKr(t2.getHours(), t2.getMinutes())}) ➔ 펄스패스(${formatTimeKr(t3.getHours(), t3.getMinutes())}) ➔ 펄스더미(${formatTimeKr(t4.getHours(), t4.getMinutes())})
+        </div>
+        <div style="color:var(--success); font-weight:800; font-size:13px; margin-top:4px;">
+          🎯 [펄스 4단계 완료] 최종 양산 예정: <strong>${formatTimeKr(t4.getHours(), t4.getMinutes())}</strong> (광 상태 확인 후 양산)
+        </div>
+      `;
+    } else {
+      const isDummyChecked = elecDummyFlags[line.name] && elecDummyFlags[line.name].isDummy;
+      const dummyBox = document.getElementById(`elec_dummy_est_${line.name}`);
+      if (dummyBox && isDummyChecked) {
+        const h = elecDummyFlags[line.name].h !== undefined ? elecDummyFlags[line.name].h : 14;
+        const m = elecDummyFlags[line.name].m !== undefined ? elecDummyFlags[line.name].m : 0;
+        const baseD = new Date(selectedDateStr + 'T00:00:00');
+        const dStart = new Date(baseD.getFullYear(), baseD.getMonth(), baseD.getDate(), h, m, 0);
+        const targetProd = new Date(dStart.getTime() + 90 * 60000);
+        
+        let dummyStatusText = '';
+        if (now < dStart) {
+          dummyStatusText = `더미 투입 대기 중 (${h}시 ${m}분 시작 예정)`;
+        } else if (now >= dStart && now < targetProd) {
+          const rMin = Math.ceil((targetProd - now) / 60000);
+          dummyStatusText = `더미 1싸이클 진행 중 (완료까지 약 ${rMin}분 남음)`;
+        } else {
+          dummyStatusText = `✅ 더미 1싸이클 1.5시간 완료 ➔ 양산 가능`;
+        }
+
+        dummyBox.innerHTML = `
+          <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:6px; padding:7px 10px; margin-top:4px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+              <span style="font-size:12px; color:var(--text-secondary);">${dummyStatusText}</span>
+              <div style="color:var(--success); font-weight:800; font-size:12.5px;">
+                🎯 양산 예정 시각: <strong>${formatTimeKr(targetProd.getHours(), targetProd.getMinutes())}</strong>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (dummyBox) {
+        dummyBox.innerHTML = '';
+      }
+    }
+  });
+}
+
+function renderActiveChemGauges(now) {
+  const container = document.getElementById('activeChemGaugesContainer');
+  if (!container) return;
+
+  const activeOrDueChems = chemList.filter(c => {
+    if (c.status === '시작') return true;
+    if (c.status === '완료') {
+      const base = new Date(c.lastDone);
+      if (!isNaN(base.getTime())) {
+        const nextDue = new Date(base.getTime() + 72 * 3600000);
+        return (now >= nextDue || formatDateOnly(nextDue) <= selectedDateStr);
+      }
+    }
+    return false;
+  });
+
+  if (activeOrDueChems.length === 0) {
+    let quickStartBtns = chemList.map(c => `
+      <button class="btn btn-sub btn-sm" onclick="setChemStepStatusById('${c.id}', '시작')">+ ${c.id} 시작</button>
+    `).join(' ');
+
+    container.innerHTML = `
+      <div class="status-detail-box" style="padding:16px; text-align:center; color:var(--text-secondary);">
+        현재 진행 중이거나 PM 예정 주기가 도래한 화학동 라인이 없습니다.<br>
+        <div style="margin-top:10px; display:flex; justify-content:center; gap:6px; flex-wrap:wrap;">
+          ${quickStartBtns}
         </div>
       </div>
     `;
-  });
-}
-
-function updateElecCustomType(lineName, field, value) {
-  const curDateStr = formatDateOnly(currentDate);
-  const key = `${curDateStr}_${lineName}`;
-  const defaultPass = document.getElementById('passTimeInput').value.trim() || '7시패스';
-  const preset = DEFAULT_ELEC_PRESETS[lineName] || { type: '산세.박리', pass: defaultPass };
-
-  if (!elecCustomTypes[key]) {
-    elecCustomTypes[key] = { ...preset };
+    return;
   }
-  elecCustomTypes[key][field] = value;
-  syncToStorage();
-  generateReport();
-}
 
-function renderTodayPills(day, curDateStr) {
-  const debarrList = document.getElementById('listDebarr');
-  const desmearList = document.getElementById('listDesmear');
-  const chemListEl = document.getElementById('listChem');
-  const electroList = document.getElementById('listElectro');
-  const ongoingList = document.getElementById('listOngoing');
-  const ongoingWrapper = document.getElementById('ongoingGroupWrapper');
+  let html = '';
 
-  debarrList.innerHTML = '';
-  desmearList.innerHTML = '';
-  chemListEl.innerHTML = '';
-  electroList.innerHTML = '';
-  ongoingList.innerHTML = '';
+  activeOrDueChems.forEach(line => {
+    const isDuePending = (line.status === '완료');
+    const startTime = new Date(line.lastDone);
+    const nextDue = new Date(startTime.getTime() + 72 * 3600000);
 
-  const etchingVal = document.getElementById('etchingInput').value.trim();
-  if (etchingVal) debarrList.innerHTML += `<span class="pm-pill highlight">${etchingVal}</span>`;
-
-  if (day === 1 && checkBiWeek(ANCHOR_BIWEEK.wash1, currentDate)) {
-    debarrList.innerHTML += `<span class="pm-pill">고압수세 1라인 <span class="badge badge-green">격주</span></span>`;
-  }
-  if (day === 3) debarrList.innerHTML += `<span class="pm-pill">데버링 3</span>`;
-  if (day === 5) debarrList.innerHTML += `<span class="pm-pill">데버링 2</span>`;
-
-  // 디스미어 (1번 반영: 인써트/초음파 4시 감지)
-  const getNote = (lineKey) => {
-    const found = manualNotes.filter(n => n.date === curDateStr && n.line.includes(lineKey));
-    return found.length > 0 ? found.map(f => f.text).join(' ') : '';
-  };
-
-  const renderDesmearPill = (shortName, fullName) => {
-    const note = getNote(fullName);
-    if (note.includes('인써트')) return `<span class="pm-pill highlight">${shortName} 04시 PM (인써트 교체)</span>`;
-    if (note.includes('초음파')) return `<span class="pm-pill highlight">${shortName} 04시 PM (초음파점검)</span>`;
-    return `<span class="pm-pill">${shortName} 기본PM${note ? ' (' + note + ')' : ''}</span>`;
-  };
-
-  if (day === 1) {
-    desmearList.innerHTML += renderDesmearPill('디8', '디스미어 8');
-    if (checkBiWeek(ANCHOR_BIWEEK.des11, currentDate)) {
-      desmearList.innerHTML += renderDesmearPill('디11', '디스미어 11');
-      desmearList.innerHTML += renderDesmearPill('디15', '디스미어 15');
+    if (isDuePending) {
+      html += `
+        <div class="gauge-box" style="border-left: 4px solid var(--warning); background:#fffbeb;">
+          <div class="gauge-top">
+            <div>
+              <strong style="font-size:14.5px; color:#b45309;">🔔 ${escapeHtml(line.id)} PM 예정 시간 도래!</strong>
+              <span class="badge badge-yellow" style="margin-left:4px;">주기 도래</span>
+            </div>
+            <button class="btn btn-sm" style="background:var(--accent); padding:5px 12px;" onclick="setChemStepStatusById('${line.id}', '시작')">⚡ ${escapeHtml(line.id)} PM 시작</button>
+          </div>
+          <div style="font-size:12.5px; color:#78350f;">
+            직전 완료: <strong>${formatDateTimeKr(startTime)}</strong> ➔ PM 예정: <strong>${formatDateTimeKr(nextDue)}</strong><br>
+            💡 위 <strong>[PM 시작]</strong> 버튼을 누르면 시작 일시가 <strong>현재 시각</strong>으로 자동 갱신되며 탭3과 연동됩니다.
+          </div>
+        </div>
+      `;
+      return;
     }
-    desmearList.innerHTML += `<span class="pm-pill highlight">화12 정기PM</span>`;
-  } else if (day === 2) {
-    desmearList.innerHTML += renderDesmearPill('디9', '디스미어 9');
-    desmearList.innerHTML += renderDesmearPill('디6', '디스미어 6');
-  } else if (day === 3) {
-    desmearList.innerHTML += renderDesmearPill('디12', '디스미어 12');
-    desmearList.innerHTML += `<span class="pm-pill highlight">화11 정기PM</span>`;
-  } else if (day === 4) {
-    desmearList.innerHTML += renderDesmearPill('디7', '디스미어 7');
-  } else if (day === 5) {
-    desmearList.innerHTML += renderDesmearPill('디10', '디스미어 10');
-    desmearList.innerHTML += `<span class="pm-pill highlight">화10 정기PM</span>`;
-  }
 
-  // 전기동
-  const elecLines = getScheduledElecLines(day, currentDate);
-  elecLines.forEach(lName => {
-    const key = `${curDateStr}_${lName}`;
-    const preset = DEFAULT_ELEC_PRESETS[lName] || { type: '산세.박리', pass: '7시패스' };
-    const saved = elecCustomTypes[key] || preset;
-    const short = lName.replace('전기동 ', '전');
-    electroList.innerHTML += `<span class="pm-pill highlight">${short} ${saved.type} (${saved.pass})</span>`;
+    const elapsedMin = Math.max(0, (now - startTime) / 60000);
+    const target12hMin = 720;
+    const pct = Math.min(100, (elapsedMin / target12hMin) * 100);
+
+    html += `
+      <div class="gauge-box" id="gauge_card_${line.id}">
+        <div class="gauge-top">
+          <div>
+            <strong style="font-size:15px; color:#0f172a;">${escapeHtml(line.id)} PM</strong>
+            <span class="badge badge-blue" style="margin-left:4px;">${escapeHtml(line.status)}</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <div class="status-step-group-compact">
+              <button class="status-step-btn-compact active-시작" onclick="setChemStepStatusById('${line.id}', '시작')">시작</button>
+              <button class="status-step-btn-compact" onclick="completeChemPM('${line.id}')">완료</button>
+            </div>
+            <span class="badge badge-blue" id="chem_pct_${line.id}">${pct.toFixed(0)}%</span>
+          </div>
+        </div>
+        <div class="progress-track"><div id="chem_bar_${line.id}" class="progress-fill ${pct>=100?'done':(pct>=90?'alert':'warn')}" style="width:${pct}%;"></div></div>
+        <div class="timeline-ticks">
+          <span>0H (PM시작)</span>
+          <span>4H (C/S진행)</span>
+          <span>8H (세척)</span>
+          <span style="color:var(--danger); font-weight:700;">★12H (액이송)</span>
+          <span style="color:var(--success); font-weight:700;">14H (양산)</span>
+        </div>
+        <div class="status-detail-box" id="chem_status_${line.id}"></div>
+      </div>
+    `;
   });
 
-  // 화학동 & 진행 중 PM
-  const winStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), 0, 0, 0);
-  const winEnd = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + 1, 8, 30, 0);
+  container.innerHTML = html;
+  updateLiveTimesOnly(now);
+}
 
-  let ongoingCount = 0;
+function setChemStepStatusById(lineId, st) {
+  const line = chemList.find(c => c.id === lineId);
+  if (!line) return;
 
-  chemList.forEach(c => {
-    const actDate = new Date(c.lastDone);
-    const nextDue = new Date(actDate.getTime() + 72 * 3600000);
-    const manualNote = getNote(c.id);
+  line.status = st;
 
-    // 2번 반영: PM중 감지 -> 하단 배치
-    if (c.note && (c.note.includes('PM중') || c.note.includes('진행중'))) {
-      ongoingList.innerHTML += `<span class="pm-pill highlight" style="color:#c2410c;">-${c.id} ${c.note}</span>`;
-      ongoingCount++;
-    } else if (formatDateOnly(actDate) === curDateStr) {
-      const timeStr = c.note || formatTimeKr(actDate.getHours(), actDate.getMinutes()) + ' PM';
-      chemListEl.innerHTML += `<span class="pm-pill highlight">${c.id} (${timeStr})</span>`;
-    } else if (nextDue >= winStart && nextDue <= winEnd) {
-      const isNextDay = (nextDue.getDate() !== currentDate.getDate());
-      const prefix = isNextDay ? `익일(${nextDue.getDate()}일) ` : '';
-      chemListEl.innerHTML += `<span class="pm-pill highlight">${c.id} (${prefix}${formatTimeKr(nextDue.getHours(), nextDue.getMinutes())})</span>`;
+  if (st === '시작') {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth() + 1;
+    const d = now.getDate();
+    const h = now.getHours();
+    const min = now.getMinutes() >= 30 ? 30 : 0;
+    line.lastDone = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}T${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+  }
+
+  syncDataToFirebase();
+  renderChemList();
+  renderWeeklyMatrix();
+  renderActiveChemGauges(new Date());
+  renderTab1ChemStatus();
+  generateShareText();
+}
+
+function completeChemPM(lineId) {
+  if (!confirm(`${lineId} PM을 완료 처리하시겠습니까?\n현재 시각 기준으로 차기 72시간 주기가 계산됩니다.`)) return;
+  const line = chemList.find(c => c.id === lineId);
+  if (!line) return;
+  
+  line.status = '완료';
+  line.lastDone = new Date().toISOString();
+
+  syncDataToFirebase();
+  renderChemList();
+  renderWeeklyMatrix();
+  renderActiveChemGauges(new Date());
+  renderTab1ChemStatus();
+  generateShareText();
+}
+
+function togglePulseProcess(lineName, isChecked) {
+  if (isChecked) {
+    const now = new Date();
+    const roundMin = now.getMinutes() >= 30 ? 30 : 0;
+    pulseProcessFlags[lineName] = {
+      isStarted: true,
+      h: now.getHours(),
+      m: roundMin
+    };
+  } else {
+    delete pulseProcessFlags[lineName];
+  }
+  syncDataToFirebase();
+  renderElectroGauges(new Date());
+}
+
+function updatePulseProcessTime(lineName, part, val) {
+  if (!pulseProcessFlags[lineName]) return;
+  pulseProcessFlags[lineName][part] = Number(val);
+  syncDataToFirebase();
+  updateLiveTimesOnly(new Date());
+}
+
+function completeElecPM(lineName) {
+  if (!confirm(`[${lineName}] PM을 완료하시겠습니까?\n진척 게이지 목록에서 제외됩니다.`)) return;
+
+  const key = selectedDateStr + '_' + lineName;
+  elecCompletedFlags[key] = true;
+
+  delete elecDummyFlags[lineName];
+  delete pulseProcessFlags[lineName];
+
+  syncDataToFirebase();
+  renderElectroGauges(new Date());
+}
+
+function restoreCompletedElec() {
+  const day = new Date(selectedDateStr + 'T00:00:00').getDay();
+  let todayElecLines = [];
+  if (day === 1) todayElecLines = ['전기동 9라인', '전기동 16라인'];
+  else if (day === 2) todayElecLines = ['전기동 18라인', '전기동 22라인'];
+  else if (day === 3) todayElecLines = ['전기동 15라인', '전기동 20라인'];
+  else if (day === 4) todayElecLines = ['전기동 11라인', '전기동 14라인', '전기동 17라인'];
+  else if (day === 5) todayElecLines = ['전기동 13라인', '전기동 21라인'];
+  else todayElecLines = ['전기동 13라인', '전기동 21라인'];
+
+  todayElecLines.forEach(name => {
+    delete elecCompletedFlags[selectedDateStr + '_' + name];
+  });
+
+  syncDataToFirebase();
+  renderElectroGauges(new Date());
+}
+
+function toggleElecDummy(lineName, isChecked) {
+  if (isChecked) {
+    const now = new Date();
+    const roundMin = now.getMinutes() >= 30 ? 30 : 0;
+    elecDummyFlags[lineName] = {
+      isDummy: true,
+      h: now.getHours(),
+      m: roundMin
+    };
+  } else {
+    delete elecDummyFlags[lineName];
+  }
+  syncDataToFirebase();
+  renderElectroGauges(new Date());
+}
+
+function updateElecDummyTimeSelect(lineName, part, val) {
+  if (!elecDummyFlags[lineName]) return;
+  elecDummyFlags[lineName][part] = Number(val);
+  syncDataToFirebase();
+  updateLiveTimesOnly(new Date());
+}
+
+function renderElectroGauges(now) {
+  const container = document.getElementById('elecGaugesContainer');
+  const restoreBtn = document.getElementById('btnRestoreElec');
+  if (!container) return;
+
+  const targetDate = new Date(selectedDateStr + 'T00:00:00');
+  const day = targetDate.getDay();
+  let todayElecLines = [];
+
+  if (day === 1) todayElecLines = [{ name: '전기동 9라인', isPulse: true }, { name: '전기동 16라인', isPulse: false }];
+  else if (day === 2) todayElecLines = [{ name: '전기동 18라인', isPulse: false }, { name: '전기동 22라인', isPulse: false }];
+  else if (day === 3) todayElecLines = [{ name: '전기동 15라인', isPulse: false }, { name: '전기동 20라인', isPulse: true }];
+  else if (day === 4) todayElecLines = [{ name: '전기동 11라인', isPulse: false }, { name: '전기동 14라인', isPulse: false }, { name: '전기동 17라인', isPulse: false }];
+  else if (day === 5) todayElecLines = [{ name: '전기동 13라인', isPulse: false }, { name: '전기동 21라인', isPulse: true }];
+  else todayElecLines = [{ name: '전기동 13라인', isPulse: false }, { name: '전기동 21라인', isPulse: true }];
+
+  const pendingElecLines = todayElecLines.filter(l => !elecCompletedFlags[selectedDateStr + '_' + l.name]);
+  const hasCompletedAny = todayElecLines.some(l => !!elecCompletedFlags[selectedDateStr + '_' + l.name]);
+
+  if (restoreBtn) {
+    restoreBtn.style.display = hasCompletedAny ? 'inline-block' : 'none';
+  }
+
+  if (pendingElecLines.length === 0) {
+    container.innerHTML = `
+      <div class="status-detail-box" style="padding:16px; text-align:center; color:var(--text-secondary);">
+        금일 예정된 모든 전기동 PM이 <strong>완료</strong>되었습니다. ✅<br>
+        <button class="btn btn-sub btn-sm" style="margin-top:8px;" onclick="restoreCompletedElec()">완료 라인 다시 표시하기</button>
+      </div>
+    `;
+    return;
+  }
+
+  const start0830 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 30, 0);
+  const end1400 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 14, 0, 0);
+
+  let html = '';
+
+  pendingElecLines.forEach(line => {
+    const hasManualEquipNote = manualNotes.some(n => n.date === selectedDateStr && n.line.includes(line.name.split('라인')[0]) && n.text.includes('설비작업'));
+    const isEquipWorkActive = (equipWorkFlags[line.name] !== undefined) ? equipWorkFlags[line.name] : hasManualEquipNote;
+
+    if (line.isPulse) {
+      const pData = pulseProcessFlags[line.name] || {};
+      const isPulseStarted = !!pData.isStarted;
+      const curH = isPulseStarted ? (pData.h !== undefined ? pData.h : 14) : 14;
+      const curM = isPulseStarted ? (pData.m !== undefined ? pData.m : 0) : 0;
+
+      let hourOptions = '';
+      for (let h = 0; h <= 23; h++) {
+        hourOptions += `<option value="${h}" ${h === curH ? 'selected' : ''}>${h}시</option>`;
+      }
+      let minOptions = `
+        <option value="0" ${curM === 0 ? 'selected' : ''}>00분</option>
+        <option value="30" ${curM === 30 ? 'selected' : ''}>30분</option>
+      `;
+
+      let pulseTimeControls = '';
+      if (isPulseStarted) {
+        pulseTimeControls = `
+          <div style="display:inline-flex; align-items:center; gap:2px; margin-left:2px;">
+            <select style="padding:2px 4px; font-size:11px;" onchange="updatePulseProcessTime('${line.name}', 'h', this.value)">${hourOptions}</select>
+            <select style="padding:2px 4px; font-size:11px;" onchange="updatePulseProcessTime('${line.name}', 'm', this.value)">${minOptions}</select>
+          </div>
+        `;
+      }
+
+      html += `
+        <div class="gauge-box">
+          <div class="gauge-top">
+            <div>
+              <strong>${escapeHtml(line.name)} <span class="badge badge-purple">펄스 4단계 공정</span></strong>
+              <label style="margin-left:6px; font-size:11.5px; cursor:pointer;">
+                <input type="checkbox" ${isEquipWorkActive ? 'checked' : ''} onchange="toggleEquipWork('${line.name}', this.checked)">
+                🛠️ 설비(17시)
+              </label>
+            </div>
+            <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap;">
+              <button class="btn btn-sm" style="background:var(--success); padding:3px 8px;" onclick="completeElecPM('${line.name}')">완료</button>
+              <label style="font-size:11.5px; font-weight:800; color:var(--purple); cursor:pointer; display:flex; align-items:center; gap:2px; margin-left:4px;">
+                <input type="checkbox" ${isPulseStarted ? 'checked' : ''} onchange="togglePulseProcess('${line.name}', this.checked)">
+                ⚡ 0.5 DC 시작
+              </label>
+              ${pulseTimeControls}
+              <span class="badge badge-purple" id="pulse_pct_${line.name}">0%</span>
+            </div>
+          </div>
+
+          <div class="pulse-step-container">
+            <div class="pulse-step-item" id="pulse_step_${line.name}_1">
+              <span>1단계 (1.5H)</span>
+              <div>0.5 DC 더미</div>
+            </div>
+            <div class="pulse-step-item" id="pulse_step_${line.name}_2">
+              <span>2단계 (1.5H)</span>
+              <div>1.5 DC 더미</div>
+            </div>
+            <div class="pulse-step-item" id="pulse_step_${line.name}_3">
+              <span>3단계 (1.5H)</span>
+              <div>펄스대비 패스</div>
+            </div>
+            <div class="pulse-step-item" id="pulse_step_${line.name}_4">
+              <span>4단계 (1.5H)</span>
+              <div>펄스 더미</div>
+            </div>
+          </div>
+
+          <div class="progress-track"><div id="pulse_bar_${line.name}" class="progress-fill warn" style="width:0%;"></div></div>
+          
+          <div class="timeline-ticks">
+            <span>0.5 DC 시작</span>
+            <span>1.5 DC</span>
+            <span>패스</span>
+            <span>더미</span>
+            <span style="color:var(--success); font-weight:700;">광확인/양산</span>
+          </div>
+
+          <div class="status-detail-box" id="pulse_status_detail_${line.name}">
+            <div>${isPulseStarted ? '진행 상태 계산 중...' : '08:30 PM 시작 ➔ 14:00 건욕 완료 후 <strong>[0.5 DC 시작]</strong>을 체크하면 시간마다 자동으로 단계가 넘어갑니다.'}</div>
+          </div>
+        </div>
+      `;
+
+    } else {
+      const isDummyChecked = elecDummyFlags[line.name] && elecDummyFlags[line.name].isDummy;
+      const curH = isDummyChecked ? (elecDummyFlags[line.name].h !== undefined ? elecDummyFlags[line.name].h : 14) : 14;
+      const curM = isDummyChecked ? (elecDummyFlags[line.name].m !== undefined ? elecDummyFlags[line.name].m : 0) : 0;
+
+      let hourOptions = '';
+      for (let h = 0; h <= 23; h++) {
+        hourOptions += `<option value="${h}" ${h === curH ? 'selected' : ''}>${h}시</option>`;
+      }
+      let minOptions = `
+        <option value="0" ${curM === 0 ? 'selected' : ''}>00분</option>
+        <option value="30" ${curM === 30 ? 'selected' : ''}>30분</option>
+      `;
+
+      let timeSelectHtml = '';
+      if (isDummyChecked) {
+        timeSelectHtml = `
+          <div style="display:inline-flex; align-items:center; gap:2px; margin-left:2px;">
+            <select style="padding:2px 4px; font-size:11px;" onchange="updateElecDummyTimeSelect('${line.name}', 'h', this.value)">${hourOptions}</select>
+            <select style="padding:2px 4px; font-size:11px;" onchange="updateElecDummyTimeSelect('${line.name}', 'm', this.value)">${minOptions}</select>
+          </div>
+        `;
+      }
+
+      let progressPct = 0;
+      let stepName = '';
+      let barClass = 'progress-fill';
+
+      if (now < start0830) {
+        stepName = '07:00 패스 완료 / 08:30 PM 시작 대기'; progressPct = 5;
+      } else if (now >= start0830 && now < end1400) {
+        progressPct = ((now - start0830) / 330 / 60000) * 40;
+        const rMin = Math.ceil((end1400 - now) / 60000);
+        stepName = `전처리 건욕 진행 중 (14시 마감까지 ${Math.floor(rMin/60)}시간 ${rMin%60}분 남음)`;
+        barClass = rMin <= 60 ? 'progress-fill alert' : 'progress-fill warn';
+      } else {
+        progressPct = 100;
+        stepName = '✅ 14시 전처리 건욕 완료 구간 경과';
+        barClass = 'progress-fill done';
+      }
+
+      html += `
+        <div class="gauge-box">
+          <div class="gauge-top">
+            <div>
+              <strong>${escapeHtml(line.name)} <span class="badge badge-blue">일반 건욕</span></strong>
+              <label style="margin-left:6px; font-size:11.5px; cursor:pointer;">
+                <input type="checkbox" ${isEquipWorkActive ? 'checked' : ''} onchange="toggleEquipWork('${line.name}', this.checked)">
+                🛠️ 설비(17시)
+              </label>
+            </div>
+            <div style="display:flex; align-items:center; gap:2px; flex-wrap:wrap;">
+              <button class="btn btn-sm" style="background:var(--success); padding:3px 8px;" onclick="completeElecPM('${line.name}')">완료</button>
+              <label style="font-size:11.5px; font-weight:700; color:var(--success); cursor:pointer; display:flex; align-items:center; gap:2px; margin-left:4px;">
+                <input type="checkbox" ${isDummyChecked ? 'checked' : ''} onchange="toggleElecDummy('${line.name}', this.checked)">
+                🔄 더미투입
+              </label>
+              ${timeSelectHtml}
+              <span class="badge badge-blue" style="margin-left:4px;">${progressPct.toFixed(0)}%</span>
+            </div>
+          </div>
+          <div class="progress-track"><div class="${barClass}" style="width:${progressPct}%;"></div></div>
+          <div class="timeline-ticks">
+            <span>07:00 패스</span>
+            <span>08:30 PM시작</span>
+            <span style="color:var(--danger); font-weight:700;">14:00 건욕완료</span>
+            ${isEquipWorkActive ? '<span style="color:var(--danger); font-weight:700;">17:00 설비완료</span>' : ''}
+            <span>더미 1싸이클</span>
+            <span style="color:var(--success); font-weight:700;">양산</span>
+          </div>
+          <div class="status-detail-box">
+            <div style="font-weight:700;">${stepName}</div>
+            <div id="elec_dummy_est_${line.name}"></div>
+          </div>
+        </div>
+      `;
     }
   });
 
-  ongoingWrapper.style.display = (ongoingCount > 0) ? 'block' : 'none';
+  container.innerHTML = html;
+  updateLiveTimesOnly(now);
 }
 
-// 최종 보고서 텍스트 생성
-function generateReport() {
-  const m = currentDate.getMonth() + 1;
-  const d = currentDate.getDate();
-  const day = currentDate.getDay();
-  const curDateStr = formatDateOnly(currentDate);
-  const defaultPass = document.getElementById('passTimeInput').value.trim() || '7시패스';
-  const etching = document.getElementById('etchingInput').value.trim();
+function renderChemList() {
+  const container = document.getElementById('chemListContainer');
+  if (!container) return;
+  container.innerHTML = '';
 
-  const getNote = (lineKey) => {
-    const found = manualNotes.filter(n => n.date === curDateStr && n.line.includes(lineKey));
-    return found.length > 0 ? found.map(f => f.text).join(' ') : '';
+  const statusList = ['시작', '완료'];
+
+  chemList.forEach((c, idx) => {
+    if (c.status === '대기' || c.status === '분석') c.status = '시작';
+
+    const isHwa8 = c.id === '화8';
+    const card = document.createElement('div');
+    card.style.background = '#f8fafc';
+    card.style.border = '1px solid var(--border-light)';
+    card.style.borderRadius = '10px';
+    card.style.padding = '12px 14px';
+    card.style.display = 'flex';
+    card.style.flexDirection = 'column';
+    card.style.gap = '8px';
+
+    let statusBtnsHtml = `<div class="status-step-group-compact">`;
+    statusList.forEach(st => {
+      const activeClass = (c.status === st) ? `active-${st}` : '';
+      statusBtnsHtml += `<button class="status-step-btn-compact ${activeClass}" onclick="setChemStepStatus(${idx}, '${st}')">${st}</button>`;
+    });
+    statusBtnsHtml += `</div>`;
+
+    const t = new Date(c.lastDone);
+    const curM = isNaN(t.getTime()) ? (new Date().getMonth() + 1) : (t.getMonth() + 1);
+    const curD = isNaN(t.getTime()) ? (new Date().getDate()) : t.getDate();
+    const curH = isNaN(t.getTime()) ? 0 : t.getHours();
+    const rawMin = isNaN(t.getTime()) ? 0 : t.getMinutes();
+    const curMin = rawMin >= 30 ? 30 : 0;
+
+    let hourOptions = '';
+    for (let h = 0; h <= 23; h++) {
+      hourOptions += `<option value="${h}" ${h === curH ? 'selected' : ''}>${h}시</option>`;
+    }
+
+    card.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+        <strong style="font-size:14.5px;">${escapeHtml(c.id)} ${isHwa8 ? '<span class="badge badge-yellow">48시간 빌드업 금지</span>' : ''}</strong>
+        <div>
+          ${statusBtnsHtml}
+          <button class="btn btn-sub btn-sm" style="margin-left:4px; padding:4px 8px;" onclick="setChemNow(${idx})">현재시각</button>
+        </div>
+      </div>
+      <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:3px;">
+          <input type="number" id="m_${idx}" value="${curM}" min="1" max="12" style="width:45px; text-align:center;" onchange="updateChemFromParts(${idx})">월
+          <input type="number" id="d_${idx}" value="${curD}" min="1" max="31" style="width:45px; text-align:center;" onchange="updateChemFromParts(${idx})">일
+          <select id="h_${idx}" onchange="updateChemFromParts(${idx})">${hourOptions}</select>
+          <select id="min_${idx}" onchange="updateChemFromParts(${idx})">
+            <option value="0" ${curMin === 0 ? 'selected' : ''}>00분</option>
+            <option value="30" ${curMin === 30 ? 'selected' : ''}>30분</option>
+          </select>
+        </div>
+        <div style="flex:1; min-width:120px;">
+          <input type="text" id="note_${idx}" value="${escapeHtml(c.note || '')}" placeholder="비고 입력" style="width:100%;" oninput="updateChemNote(${idx}, this.value)">
+        </div>
+      </div>
+      <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+        <span style="font-size:11.5px; color:var(--text-secondary);">태그 즉시입력:</span>
+        <button class="btn btn-sub btn-sm" onclick="setChemNoteTag(${idx}, '촉매건욕')">+ 촉매건욕</button>
+        <button class="btn btn-sub btn-sm" onclick="setChemNoteTag(${idx}, '화학동 건욕')">+ 화학동 건욕</button>
+        <button class="btn btn-sub btn-sm" style="background:#94a3b8;" onclick="setChemNoteTag(${idx}, '')">초기화</button>
+      </div>
+      <div id="chem_box_${idx}" style="font-size:12px; padding:7px 10px; background:#ffffff; border:1px solid #e2e8f0; border-radius:4px;"></div>
+    `;
+    container.appendChild(card);
+  });
+  updateChemRealtimeStatuses();
+}
+
+function updateChemFromParts(idx) {
+  const m = document.getElementById(`m_${idx}`).value;
+  const d = document.getElementById(`d_${idx}`).value;
+  const h = document.getElementById(`h_${idx}`).value;
+  const min = document.getElementById(`min_${idx}`).value;
+  const now = new Date();
+  const year = now.getFullYear();
+  chemList[idx].lastDone = `${year}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}T${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+  syncDataToFirebase();
+  renderActiveChemGauges(new Date());
+  renderTab1ChemStatus();
+  generateShareText();
+}
+
+function setChemStepStatus(idx, st) {
+  chemList[idx].status = st;
+
+  if (st === '시작') {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth() + 1;
+    const d = now.getDate();
+    const h = now.getHours();
+    const min = now.getMinutes() >= 30 ? 30 : 0;
+    chemList[idx].lastDone = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}T${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+  }
+
+  syncDataToFirebase();
+  renderChemList();
+  renderWeeklyMatrix();
+  renderActiveChemGauges(new Date());
+  renderTab1ChemStatus();
+  generateShareText();
+}
+
+function setChemNoteTag(idx, tag) {
+  chemList[idx].note = tag;
+  const noteInput = document.getElementById(`note_${idx}`);
+  if (noteInput) noteInput.value = tag;
+  syncDataToFirebase();
+  renderActiveChemGauges(new Date());
+  renderTab1ChemStatus();
+  generateShareText();
+}
+
+function updateChemRealtimeStatuses() {
+  const now = new Date();
+  chemList.forEach((c, idx) => {
+    const box = document.getElementById(`chem_box_${idx}`);
+    if (!box) return;
+    const t = new Date(c.lastDone);
+    if (isNaN(t.getTime())) { box.innerText = '일시 확인 필요'; return; }
+
+    const isRunning = (c.status === '시작');
+
+    if (isRunning) {
+      const elapsedH = (now - t) / 3600000;
+      const transferTime = new Date(t.getTime() + 12 * 3600000);
+      box.innerHTML = `<span style="color:var(--accent); font-weight:700;">PM 진행 중 [${c.status}] (${elapsedH.toFixed(1)}H 경과)</span> | 12시간 액이송: <strong>${formatDateTimeKr(transferTime)}</strong>`;
+    } else {
+      const nextDue = new Date(t.getTime() + 72 * 3600000);
+      const remainH = (nextDue - now) / 3600000;
+      let html = `다음 PM(72H): <strong>${formatDateTimeKr(nextDue)}</strong> (${remainH > 0 ? remainH.toFixed(1) + 'H 남음' : '<span style="color:var(--danger); font-weight:700;">주기 도래 (탭2 확인)</span>'})`;
+
+      if (c.id === '화8') {
+        const buildupLimit = new Date(t.getTime() + 48 * 3600000);
+        const bRemain = (buildupLimit - now) / 3600000;
+        if (bRemain <= 0) {
+          html += `<br><span style="color:var(--danger); font-weight:700;">⛔ 빌드업 금지 적용 중 (${formatDateTimeKr(buildupLimit)} 경과)</span>`;
+        } else {
+          html += `<br><span style="color:var(--success); font-weight:700;">✅ 빌드업 가능 (${bRemain.toFixed(1)}H 후 금지)</span>`;
+        }
+      }
+      box.innerHTML = html;
+    }
+  });
+}
+
+function updateChemNote(idx, val) { chemList[idx].note = val; syncDataToFirebase(); generateShareText(); }
+
+function setChemNow(idx) {
+  const now = new Date();
+  const year = now.getFullYear();
+  const m = now.getMonth() + 1;
+  const d = now.getDate();
+  const h = now.getHours();
+  const min = now.getMinutes() >= 30 ? 30 : 0;
+  chemList[idx].lastDone = `${year}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}T${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+  
+  const elM = document.getElementById(`m_${idx}`);
+  const elD = document.getElementById(`d_${idx}`);
+  const elH = document.getElementById(`h_${idx}`);
+  const elMin = document.getElementById(`min_${idx}`);
+  if (elM) elM.value = m;
+  if (elD) elD.value = d;
+  if (elH) elH.value = h;
+  if (elMin) elMin.value = min;
+
+  syncDataToFirebase();
+  renderActiveChemGauges(new Date());
+  renderTab1ChemStatus();
+  generateShareText();
+}
+
+let activePulseReminds = [];
+
+function renderPulseTable() {
+  const tbody = document.getElementById('pulseTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+  const now = new Date();
+  activePulseReminds = [];
+
+  pulseList.forEach((p, idx) => {
+    const base = new Date(p.lastDate + 'T00:00:00');
+    const d1 = new Date(base.getTime() + 120 * 86400000);
+    const d2 = new Date(base.getTime() + 240 * 86400000);
+    const d3 = new Date(base.getTime() + 360 * 86400000);
+    const diff = Math.ceil((d1 - now) / 86400000);
+
+    let badge = '';
+    if (diff <= 28 && diff > 0) {
+      badge = `<span class="badge badge-purple">🔔 D-${diff} (4주 전 리마인드)</span>`;
+      activePulseReminds.push(`${p.line} 4주 전 (${formatDateTimeKr(d1).split(' ')[0]} ${formatDateTimeKr(d1).split(' ')[1]} 예정)`);
+    } else if (diff < 0) {
+      badge = `<span class="badge badge-red">D+${Math.abs(diff)} 초과</span>`;
+    } else {
+      badge = `<span class="badge badge-green">D-${diff}</span>`;
+    }
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><strong>${escapeHtml(p.line)}</strong></td>
+      <td><input type="date" value="${escapeHtml(p.lastDate)}" onchange="updatePulseDate(${idx}, this.value)" style="width:130px;"></td>
+      <td><strong>${formatDateTimeKr(d1).split(' ')[0]} ${formatDateTimeKr(d1).split(' ')[1]}</strong></td>
+      <td>${formatDateTimeKr(d2).split(' ')[0]} ${formatDateTimeKr(d2).split(' ')[1]}</td>
+      <td>${formatDateTimeKr(d3).split(' ')[0]} ${formatDateTimeKr(d3).split(' ')[1]}</td>
+      <td>${badge}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  checkPulseBannerTrigger();
+}
+
+function checkPulseBannerTrigger() {
+  const banner = document.getElementById('remindBanner');
+  const bannerText = document.getElementById('remindBannerText');
+  const dismissedKey = 'pulse_banner_dismissed_' + selectedDateStr;
+
+  if (activePulseReminds.length > 0 && !sessionStorage.getItem(dismissedKey)) {
+    bannerText.innerHTML = `🔔 <strong>[액퍼내기 4주 전 알림]</strong> ${activePulseReminds.join(' / ')}`;
+    banner.style.display = 'flex';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+function dismissRemindBanner() {
+  document.getElementById('remindBanner').style.display = 'none';
+  sessionStorage.setItem('pulse_banner_dismissed_' + selectedDateStr, 'true');
+}
+
+function updatePulseDate(idx, val) {
+  pulseList[idx].lastDate = val;
+  syncDataToFirebase();
+  renderPulseTable();
+}
+
+function generateShareText() {
+  if (!selectedDateStr) return;
+  const targetDate = new Date(selectedDateStr + 'T00:00:00');
+  const day = targetDate.getDay();
+  const m = targetDate.getMonth() + 1;
+  const d = targetDate.getDate();
+  const pass = document.getElementById('passTimeInput') ? document.getElementById('passTimeInput').value : '7시패스';
+
+  const bTitle = document.getElementById('briefingTitle');
+  if (bTitle) bTitle.innerText = `동도금 ${m}월 ${d}일 PM일정`;
+
+  const windowStart = new Date(targetDate.getTime() + 8.5 * 3600000);
+  const windowEnd = new Date(targetDate.getTime() + 32.5 * 3600000);
+
+  const getNote = (lineKeyword) => {
+    const found = manualNotes.filter(n => n.date === selectedDateStr && n.line.includes(lineKeyword));
+    return found.length > 0 ? ` ${found.map(f => f.text).join(' ')}` : '';
   };
 
   let debarr = '';
   let wash = '';
+
+  if (day === 1 && checkBiWeek(ANCHOR_BIWEEK.wash1, targetDate)) {
+    wash = '고압수세 1라인' + getNote('고압수세');
+  }
+  if (day === 3) {
+    debarr = '데3' + getNote('데버링 3');
+  } else if (day === 5) {
+    debarr = '데2' + getNote('데버링 2');
+  }
+
+  const todayEtch = getEtchingLine(targetDate);
+  let etching = todayEtch + getNote(todayEtch);
+
   let desmear = [];
   let blackhole = '';
   let electro = [];
   let chems = [];
   let ongoing = [];
 
-  // 데버링 / 고압수세
-  if (day === 1 && checkBiWeek(ANCHOR_BIWEEK.wash1, currentDate)) {
-    wash = '고압수세 1라인';
-  }
-  if (day === 3) debarr = '데3';
-  if (day === 5) debarr = '데2';
-
-  // 1번 반영: 디스미어 04시 변수 처리 함수
-  const formatDesmearLine = (shortName, fullName) => {
-    const note = getNote(fullName);
-    if (note.includes('인써트')) return `${shortName} 04시 PM (인써트 교체)`;
-    if (note.includes('초음파')) return `${shortName} 04시 PM (초음파점검)`;
-    if (note.includes('04시') || note.includes('새벽')) return `${shortName} 04시 PM (${note})`;
-    return `${shortName} 기본PM${note ? ' ' + note : ''}`;
-  };
-
   if (day === 1) {
-    desmear.push(formatDesmearLine('디8', '디스미어 8'));
-    if (checkBiWeek(ANCHOR_BIWEEK.des11, currentDate)) {
-      desmear.push(formatDesmearLine('디11', '디스미어 11'));
-      desmear.push(formatDesmearLine('디15', '디스미어 15'));
-    }
-    blackhole = `화12 정기PM${getNote('화12') ? ' ' + getNote('화12') : ''}`;
+    desmear.push(`디8 기본PM${getNote('디스미어 8')}`);
+    if (checkBiWeek(ANCHOR_BIWEEK.des11, targetDate)) desmear.push(`디11 기본PM${getNote('디스미어 11')}`);
+    if (checkBiWeek(ANCHOR_BIWEEK.des11, targetDate)) desmear.push(`디15 기본PM${getNote('디스미어 15')}`);
+    blackhole = `화12 정기PM${getNote('화12')}`;
+    electro.push(`전9 산탈지.산세.박리 (${pass})${getNote('전기동 9')}`);
+    electro.push(`전16 산세.박리 (${pass})${getNote('전기동 16')}`);
   } else if (day === 2) {
-    desmear.push(formatDesmearLine('디9', '디스미어 9'), formatDesmearLine('디6', '디스미어 6'));
+    desmear.push(`디9 기본PM${getNote('디스미어 9')}`, `디6 기본PM${getNote('디스미어 6')}`);
+    electro.push(`전18 산세.박리 (${pass})${getNote('전기동 18')}`);
+    electro.push(`전22 산세.박리 (${pass})${getNote('전기동 22')}`);
   } else if (day === 3) {
-    desmear.push(formatDesmearLine('디12', '디스미어 12'));
-    blackhole = `화11 정기PM${getNote('화11') ? ' ' + getNote('화11') : ''}`;
+    desmear.push(`디12 기본PM${getNote('디스미어 12')}`);
+    blackhole = `화11 정기PM${getNote('화11')}`;
+    electro.push(`전15 산세.박리 (${pass})${getNote('전기동 15')}`);
+    electro.push(`전20 산탈지.산세.박리 (${pass})${getNote('전기동 20')}`);
   } else if (day === 4) {
-    desmear.push(formatDesmearLine('디7', '디스미어 7'));
+    desmear.push(`디7 기본PM${getNote('디스미어 7')}`);
+    electro.push(`전11 산세.박리 (${pass})${getNote('전기동 11')}`);
+    electro.push(`전14 산탈지.산세.박리 (${pass})${getNote('전기동 14')}`);
+    electro.push(`전17 산세.박리 (${pass})${getNote('전기동 17')}`);
   } else if (day === 5) {
-    desmear.push(formatDesmearLine('디10', '디스미어 10'));
-    blackhole = `화10 정기PM${getNote('화10') ? ' ' + getNote('화10') : ''}`;
+    desmear.push(`디10 기본PM${getNote('디스미어 10')}`);
+    blackhole = `화10 정기PM${getNote('화10')}`;
+    if (checkBiWeek(ANCHOR_BIWEEK.elec12, targetDate)) electro.push(`전12 산세.박리 (${pass})${getNote('전기동 12')}`);
+    electro.push(`전13 산세.박리 (${pass})${getNote('전기동 13')}`);
+    electro.push(`전21 산탈지.산세.박리 (${pass})${getNote('전기동 21')}`);
   }
-
-  // 3번 반영: 전기동 라인 커스텀 유형 적용
-  const elecLines = getScheduledElecLines(day, currentDate);
-  elecLines.forEach(lName => {
-    const key = `${curDateStr}_${lName}`;
-    const preset = DEFAULT_ELEC_PRESETS[lName] || { type: '산세.박리', pass: defaultPass };
-    const saved = elecCustomTypes[key] || preset;
-    const short = lName.replace('전기동 ', '전');
-    const note = getNote(lName);
-    const notePart = note ? ` ${note}` : '';
-    electro.push(`${short} ${saved.type} (${saved.pass})${notePart}`);
-  });
-
-  // 화학동 & 2번 반영: PM중 하단 배치 로직
-  const winStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), 0, 0, 0);
-  const winEnd = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + 1, 8, 30, 0);
 
   chemList.forEach(c => {
-    const actDate = new Date(c.lastDone);
-    const nextDue = new Date(actDate.getTime() + 72 * 3600000);
-    const manualNote = getNote(c.id);
+    const t = new Date(c.lastDone);
+    const isRunning = (c.status === '시작');
 
-    // PM중 감지 시 맨 아래 배열로 분기
-    if (c.note && (c.note.includes('PM중') || c.note.includes('진행중'))) {
-      ongoing.push(`-${c.id} ${c.note}`);
-    } else if (formatDateOnly(actDate) === curDateStr) {
-      let desc = c.note || '기본PM';
-      if (manualNote) desc += ' ' + manualNote;
-      // '13시 촉매건욕' 등 앞에 '25일 ' 붙여줌
-      const prefix = desc.includes(`${d}일`) ? '' : `${d}일 `;
-      chems.push(`${c.id} ${prefix}${desc}`);
-    } else if (nextDue >= winStart && nextDue <= winEnd) {
-      const isNextDay = (nextDue.getDate() !== currentDate.getDate());
-      const prefix = isNextDay ? `익일(${nextDue.getDate()}일) ` : '';
-      const timeKr = formatTimeKr(nextDue.getHours(), nextDue.getMinutes());
-      const noteText = manualNote ? ` ${manualNote}` : (c.note ? ` ${c.note}` : ' 기본PM');
-      chems.push(`${c.id} ${prefix}${timeKr}${noteText}`);
-    } else if (manualNote) {
-      chems.push(`${c.id} ${manualNote}`);
+    if (isRunning) {
+      const timeKr = formatTimeKr(t.getHours(), t.getMinutes());
+      ongoing.push(`-${c.id} ${timeKr} PM 진행중`);
+    } else {
+      const nextDue = new Date(t.getTime() + 72 * 3600000);
+      const manualChemNote = getNote(c.id);
+      if (nextDue >= windowStart && nextDue <= windowEnd) {
+        const timeKr = formatTimeKr(nextDue.getHours(), nextDue.getMinutes());
+        const prefix = (nextDue.getDate() !== targetDate.getDate()) ? `익일(${nextDue.getDate()}일) ` : '';
+        const noteText = manualChemNote || (c.note ? ` ${c.note}` : ' 기본PM');
+        chems.push(`${c.id} ${prefix}${timeKr}${noteText}`);
+      } else if (manualChemNote) {
+        chems.push(`${c.id} ${manualChemNote}`);
+      } else if (c.note && c.note.includes(`${d}일`)) {
+        chems.push(`${c.id} ${c.note}`);
+      }
     }
   });
 
-  // 전체 브리핑 조립 (빈 줄 규격 준수)
   let out = `동도금 ${m}월 ${d}일 PM일정\n\n`;
   if (debarr) out += `${debarr}\n\n`;
   if (wash) out += `${wash}\n\n`;
@@ -1039,197 +2321,23 @@ function generateReport() {
     out += `${electro.join('\n')}\n\n`;
   }
 
-  // 2번 반영: PM중인 라인을 이상입니다 바로 위(맨 하단)에 배치
   if (ongoing.length > 0) {
     out += `${ongoing.join('\n')}\n\n`;
   }
 
   out += `이상입니다.`;
-
-  document.getElementById('reportOutput').value = out;
+  const outEl = document.getElementById('shareTextOutput');
+  if (outEl) outEl.value = out;
 }
 
-function addTodayNote() {
-  const line = document.getElementById('quickLineSelect').value;
-  const text = document.getElementById('quickNoteText').value.trim();
-  if (!text) return;
-
-  manualNotes.push({
-    id: Date.now().toString(),
-    date: formatDateOnly(currentDate),
-    line,
-    text
-  });
-
-  syncToStorage();
-  document.getElementById('quickNoteText').value = '';
-  renderReportTab();
-}
-
-function setQuickText(val) { document.getElementById('quickNoteText').value = val; }
-function deleteNote(id) {
-  manualNotes = manualNotes.filter(n => n.id !== id);
-  syncToStorage();
-  renderReportTab();
-}
-
-function copyReport() {
-  const el = document.getElementById('reportOutput');
+function copyShareText() {
+  const el = document.getElementById('shareTextOutput');
+  if (!el) return;
   el.select();
   navigator.clipboard.writeText(el.value).then(() => {
-    alert('📋 당일 PM 보고문이 클립보드에 복사되었습니다.');
+    alert('PM 공유 텍스트가 클립보드에 복사되었습니다.');
   });
 }
-
-// [매트릭스 탭]
-function renderMatrixTab() {
-  const targetMon = getMonday(currentDate);
-  const days = ['월', '화', '수', '목', '금', '토', '일'];
-  const curStr = formatDateOnly(currentDate);
-
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(targetMon.getTime() + i * 86400000);
-    const dStr = formatDateOnly(d);
-    const th = document.getElementById(`th_${i+1}`);
-    th.innerHTML = `${days[i]} <span style="font-size:11px; font-weight:normal;">(${d.getMonth()+1}/${d.getDate()})</span>`;
-    th.className = (dStr === curStr) ? 'today-col' : '';
-    th.style.cursor = 'pointer';
-    th.onclick = () => selectDate(dStr);
-
-    const cell = document.getElementById(`m_chem_${i+1}`);
-    cell.innerHTML = '';
-    let matches = [];
-    chemList.forEach(c => {
-      const act = new Date(c.lastDone);
-      const due = new Date(act.getTime() + 72 * 3600000);
-      if (formatDateOnly(act) === dStr) {
-        matches.push(`<strong>${c.id}</strong> <span style="color:var(--purple);">(당일 PM)</span>`);
-      } else if (formatDateOnly(due) === dStr) {
-        matches.push(`<strong>${c.id}</strong> <span style="color:var(--accent);">(${formatTimeKr(due.getHours(), due.getMinutes())})</span>`);
-      }
-    });
-    cell.innerHTML = matches.length > 0 ? matches.join('<br>') : '<span style="color:#94a3b8;">-</span>';
-  }
-
-  const endSun = new Date(targetMon.getTime() + 6 * 86400000);
-  document.getElementById('matrixWeekRange').innerText = `${targetMon.getMonth()+1}/${targetMon.getDate()} ~ ${endSun.getMonth()+1}/${endSun.getDate()}`;
-
-  setTag('m_tag_wash1', checkBiWeek(ANCHOR_BIWEEK.wash1, currentDate));
-  setTag('m_tag_des11', checkBiWeek(ANCHOR_BIWEEK.des11, currentDate));
-  setTag('m_tag_des15', checkBiWeek(ANCHOR_BIWEEK.des11, currentDate));
-  setTag('m_tag_elec12', checkBiWeek(ANCHOR_BIWEEK.elec12, currentDate));
-}
-
-function setTag(id, isThisWeek) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.innerText = isThisWeek ? '금주' : '차주';
-  el.className = isThisWeek ? 'badge badge-green' : 'badge badge-sub';
-}
-
-// [주기 설정 탭]
-function renderCycleSettings() {
-  const chemBody = document.getElementById('chemSettingTableBody');
-  chemBody.innerHTML = '';
-
-  chemList.forEach((c, idx) => {
-    const act = new Date(c.lastDone);
-    const m = isNaN(act.getTime()) ? (new Date().getMonth()+1) : (act.getMonth()+1);
-    const d = isNaN(act.getTime()) ? new Date().getDate() : act.getDate();
-    const h = isNaN(act.getTime()) ? 0 : act.getHours();
-    const min = isNaN(act.getTime()) ? 0 : (act.getMinutes() >= 30 ? 30 : 0);
-
-    const due = new Date(act.getTime() + 72 * 3600000);
-
-    let hOptions = '';
-    for (let i = 0; i <= 23; i++) {
-      hOptions += `<option value="${i}" ${i === h ? 'selected' : ''}>${i}시</option>`;
-    }
-
-    chemBody.innerHTML += `
-      <tr>
-        <td><strong>${c.id}</strong></td>
-        <td>
-          <select id="chem_st_${idx}" style="padding:4px;">
-            <option value="완료" ${c.status === '완료' ? 'selected' : ''}>완료</option>
-            <option value="시작" ${c.status === '시작' ? 'selected' : ''}>시작</option>
-            <option value="분석" ${c.status === '분석' ? 'selected' : ''}>분석</option>
-          </select>
-        </td>
-        <td>
-          <div style="display:inline-flex; align-items:center; gap:3px;">
-            <input type="number" id="chem_m_${idx}" value="${m}" min="1" max="12" style="width:42px; text-align:center; padding:4px;">월
-            <input type="number" id="chem_d_${idx}" value="${d}" min="1" max="31" style="width:42px; text-align:center; padding:4px;">일
-            <select id="chem_h_${idx}" style="padding:4px;">${hOptions}</select>
-            <select id="chem_min_${idx}" style="padding:4px;">
-              <option value="0" ${min === 0 ? 'selected' : ''}>00분</option>
-              <option value="30" ${min === 30 ? 'selected' : ''}>30분</option>
-            </select>
-          </div>
-        </td>
-        <td><strong style="color:var(--accent);">${formatDateOnly(due).slice(5)} ${formatTimeKr(due.getHours(), due.getMinutes())}</strong></td>
-        <td><input type="text" value="${c.note || ''}" id="chem_note_${idx}" placeholder="비고" style="width:100%;"></td>
-      </tr>
-    `;
-  });
-
-  const pulseBody = document.getElementById('pulseSettingTableBody');
-  pulseBody.innerHTML = '';
-  pulseList.forEach((p, idx) => {
-    const act = new Date(p.lastDate + 'T00:00:00');
-    const m = isNaN(act.getTime()) ? (new Date().getMonth()+1) : (act.getMonth()+1);
-    const d = isNaN(act.getTime()) ? new Date().getDate() : act.getDate();
-
-    const d1 = new Date(act.getTime() + 120 * 86400000);
-    const diff = Math.ceil((d1 - new Date()) / 86400000);
-
-    pulseBody.innerHTML += `
-      <tr>
-        <td><strong>${p.line}</strong></td>
-        <td>
-          <div style="display:inline-flex; align-items:center; gap:3px;">
-            <input type="number" id="pulse_m_${idx}" value="${m}" min="1" max="12" style="width:42px; text-align:center; padding:4px;">월
-            <input type="number" id="pulse_d_${idx}" value="${d}" min="1" max="31" style="width:42px; text-align:center; padding:4px;">일
-          </div>
-        </td>
-        <td><strong>${formatDateOnly(d1).slice(5)}</strong></td>
-        <td><span class="badge ${diff <= 28 ? 'badge-purple' : 'badge-green'}">D-${diff}</span></td>
-      </tr>
-    `;
-  });
-}
-
-function saveCycles() {
-  const curYear = new Date().getFullYear();
-
-  chemList.forEach((c, idx) => {
-    const st = document.getElementById(`chem_st_${idx}`).value;
-    const m = String(document.getElementById(`chem_m_${idx}`).value).padStart(2, '0');
-    const d = String(document.getElementById(`chem_d_${idx}`).value).padStart(2, '0');
-    const h = String(document.getElementById(`chem_h_${idx}`).value).padStart(2, '0');
-    const min = String(document.getElementById(`chem_min_${idx}`).value).padStart(2, '0');
-    const note = document.getElementById(`chem_note_${idx}`).value.trim();
-
-    c.status = st;
-    c.lastDone = `${curYear}-${m}-${d}T${h}:${min}`;
-    c.note = note;
-  });
-
-  pulseList.forEach((p, idx) => {
-    const m = String(document.getElementById(`pulse_m_${idx}`).value).padStart(2, '0');
-    const d = String(document.getElementById(`pulse_d_${idx}`).value).padStart(2, '0');
-    p.lastDate = `${curYear}-${m}-${d}`;
-  });
-
-  syncToStorage();
-  alert('설정이 저장 및 Firebase에 동기화되었습니다.');
-  renderAll();
-}
-
-window.onload = function() {
-  initFirebase();
-  renderAll();
-};
 </script>
 </body>
 </html>
