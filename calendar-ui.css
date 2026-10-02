@@ -262,8 +262,7 @@ input[type="number"], input[readonly], .num, .stat-value, .hero-amount, .sub-val
 @media(max-width:380px) { #modal-override .override-sheet { padding:18px; } #modal-override .opt-btn { padding:10px; } }
 @media(prefers-reduced-motion:reduce) { #account-sync-now[aria-busy="true"]::before, #google-sync-enable[aria-busy="true"]::before { animation:none; } }
 
-/* Preview-only home design. Stored in empty; not applied to shift_cal. */
-.design-test-label { color:#8a8a8a; font-size:11px; text-align:center; margin:10px 0 14px; letter-spacing:.2px; }
+/* Minimal home calendar. */
 body[data-view="calendar"] { background:#fff; --primary:#303030; --primary-dark:#202020; --cal-line:#ededed; }
 body[data-view="calendar"] .reference-header .month-title-btn { color:#202020; font-weight:700; }
 body[data-view="calendar"] .reference-header .account-menu-button, body[data-view="calendar"] .icon-button { color:#303030; }
@@ -297,10 +296,56 @@ body[data-view="calendar"] .nav-item.active { color:#252525; }
 body[data-view="calendar"] .nav-item.active .nav-visual { background:#f3f3f3; border-radius:18px; }
 @media(max-width:380px) { .shift-badge { min-width:27px; padding:0 5px; } }
 
-/* Direct buttons avoid reliance on a native select picker inside the account dialog. */
-.group-choice-list { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
-.group-choice-list button { min-width:0; min-height:48px; border:1px solid #e2e2e2; border-radius:12px; background:#fafafa; color:#616161; font:inherit; font-size:15px; font-weight:600; cursor:pointer; -webkit-tap-highlight-color:transparent; }
-.group-choice-list button[aria-pressed="true"] { background:#303030; border-color:#303030; color:#fff; }
-.group-choice-list button:focus-visible { outline:2px solid #666; outline-offset:3px; }
-.group-choice-list button:active { transform:scale(.98); }
-.group-selection-status { min-height:18px; margin:10px 0 0; color:#737373; font-size:12px; line-height:1.6; }
+
+
+/* Shared quiet surfaces for payroll, annual leave and their settings. */
+:root { --primary:#303030; --primary-dark:#202020; --text-main:#303030; --text-sub:#737373; --border:#e5e5e5; --shift-day:#fff4ba; --shift-night:#eee8fa; --shift-off:#8a8a8a; --shift-special-day:#edcb63; --shift-special-night:#a997cb; }
+body { background:#fff; }
+.shift-badge.special-day { background:var(--shift-special-day); color:#443a1e; }
+.shift-badge.special-night { background:var(--shift-special-night); color:#312846; }
+#modal-pill-day { color:#76662d !important; background:var(--shift-day); }
+#modal-pill-night { color:#695681 !important; background:var(--shift-night); border-radius:10px; padding:4px 10px; }
+#modal-pill-off { color:#737373 !important; }
+#modal-pill-special { color:#80682d !important; }
+#modal-pill-leave { color:#616161 !important; }
+.bottom-nav { background:#fff; border-color:#eee; border-radius:0; box-shadow:none; }
+.nav-item { color:#858585; }
+.nav-item.active { color:#252525; }
+.nav-item.active .nav-visual { background:#f3f3f3; border-radius:18px; }
+#view-payroll .card, #view-payroll .salary-hero, #view-leave .card { background:#fff; border:1px solid #e5e5e5; border-radius:20px; box-shadow:none; padding:20px; }
+#view-payroll .salary-hero, #view-leave .leave-overview { background:#f7f7f7; border-color:#ebebeb; }
+#view-payroll .hero-label, #view-payroll .estimate-caption { color:#737373; }
+#view-payroll .hero-amount, #view-payroll #hero-regular-pay, #view-payroll #hero-bonus-pay, #view-payroll .estimate-net, #view-payroll #estimate-net { color:#252525 !important; }
+#view-payroll .hero-amount { letter-spacing:-.7px; }
+#view-payroll .hero-subgrid { border-color:#e4e4e4; }
+#view-payroll .period-tag, #view-leave .settings-year, #bonus-badge { background:#ededed; color:#616161; border:0; border-radius:8px; }
+#view-payroll .card-header, #view-leave .card-header { color:#303030; font-size:16px; font-weight:600; }
+#view-payroll .card-header > span:first-child::before, #view-leave .card-header > span:first-child::before { display:none; }
+#view-payroll .input-group input, #view-leave .input-group input { border-color:#e5e5e5; border-radius:12px; font-size:16px; background:#fff; color:#303030; min-height:44px; }
+#view-payroll .input-group input[readonly] { background:#f5f5f5 !important; color:#616161 !important; border-color:#e5e5e5 !important; }
+#view-payroll .toggle-box { background:#f7f7f7; border-color:#e8e8e8; }
+#view-payroll .toggle-box label { color:#616161; }
+#view-payroll .btn-save, #view-leave .btn-save, .settings-dialog .btn-save, #payroll-sms-dialog .sms-primary-btn { background:#252525; color:#fff; border:0; border-radius:999px; min-height:44px; }
+#view-payroll .btn-save:active, #view-leave .btn-save:active, .settings-dialog .btn-save:active { background:#444; }
+#view-payroll .btn-reset-data, #view-leave .btn-reset-data, #payroll-sms-dialog .sms-clear-btn { background:#f1f1f1; border:0; color:#616161; border-radius:999px; min-height:44px; }
+#view-payroll .today-btn { border-color:#e2e2e2; color:#616161; }
+#view-payroll .payroll-disclosure { background:#fff; }
+.payroll-detail-content { border-color:#e8e8e8; }
+#view-payroll .pay-table tr.total-row, #view-payroll .pay-table .bonus-row { background:#f5f5f5; border-color:#e5e5e5; }
+#view-payroll #row-gross-pay { color:#252525 !important; }
+#view-payroll #row-estimated-deduction, #view-payroll #tr-attendance-deduction .num { color:#616161; }
+#view-leave .leave-stat-box .stat-value, #view-leave .leave-stat-box:first-child .stat-value, #view-leave .leave-stat-box:nth-child(2) .stat-value, #view-leave .leave-remaining .stat-value, #view-leave .leave-money-total #val-total-leave-pay { color:#252525; }
+#view-leave .leave-remaining .stat-value { font-weight:750; }
+#view-leave .wage-settings-card .input-group { border-color:#ededed; }
+#view-leave .wage-settings-card input[readonly] { background:transparent; }
+#view-leave .account-hint { color:#737373; font-size:12px; line-height:1.7; }
+.menu-leave-summary { background:#f5f5f5; color:#616161; border:1px solid #ededed; }
+.menu-leave-summary > :first-child, .menu-leave-summary strong, .settings-dialog h3 { color:#303030; }
+.settings-dialog .input-group input { border:1px solid #e5e5e5; border-radius:12px; background:#fafafa; }
+#payroll-sms-dialog .sms-textarea { background:#f7f7f7; border-color:#e5e5e5; border-radius:16px; color:#303030; }
+#payroll-sms-dialog .sms-preview { background:#f7f7f7; border-color:#e5e5e5; }
+#payroll-sms-dialog .sms-primary-btn:disabled { background:#d9d9d9; color:#737373; }
+#view-payroll input[type="checkbox"], #payroll-estimate-toggle { accent-color:#303030; }
+.account-drawer .group-select { font-size:16px; min-height:48px; border-radius:12px; padding:12px 32px 12px 14px; border:1px solid #dfdfdf; background:#f7f7f7; color:#303030; }
+.account-drawer .group-select-wrapper::after { right:14px; color:#737373; font-size:12px; }
+.group-selection-status { margin:10px 0 0; color:#737373; font-size:12px; line-height:1.6; }
