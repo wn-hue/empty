@@ -29,13 +29,13 @@
 <link rel="stylesheet" href="./work-editor.css?v=3">
 <link rel="stylesheet" href="./wage-leave-layout.css?v=2">
 <link rel="stylesheet" href="./navigation-special.css?v=2">
-<link rel="stylesheet" href="./studio.css?v=1">
+<link rel="stylesheet" href="./studio.css?v=2">
 </head>
 <body data-view="calendar">
-    <div class="studio-brandbar"><a class="studio-brand" href="./" aria-label="Shift 홈"><span class="studio-mark" aria-hidden="true">s</span><strong>shift<span>.</span></strong></a><span class="studio-brand-caption">근무와 생활 사이</span><button type="button" class="studio-profile" onclick="switchView('all');document.getElementById('account-sheet-open').click()" aria-label="로그인 및 내 계정"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="8" r="3.5"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></button></div>
     <main class="container">
         <!-- 최상단 헤더 바 -->
         <header class="app-header reference-header">
+            <button class="studio-menu-button" type="button" onclick="switchView('all')" aria-label="내 메뉴 열기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 8h16M4 16h10"/></svg></button>
             <div class="header-title-area">
                 <button class="month-title-btn" id="cal-month-title-btn" onclick="openYearMonthPicker('calendar')" aria-label="달력 연도와 월 선택"><span id="cal-month-title-text">2026. 10</span></button>
                 <span id="header-view-title" class="header-view-title" hidden>시급 · 연차</span>
@@ -57,7 +57,6 @@
             </details>
         </aside>
         <section id="view-calendar" class="view-page active">
-            <aside class="studio-day-overview" aria-label="오늘의 근무"><div><span class="studio-eyebrow" id="studio-today-date">TODAY</span><div class="studio-today-line"><strong id="studio-today-shift">내 근무</strong><span id="studio-group-chip">C조</span></div><p id="studio-tomorrow">내일 근무를 확인하세요</p></div><span class="studio-day-art" id="studio-today-symbol" aria-hidden="true">☀</span></aside>
 
             <div class="calendar-month-controls" hidden></div>
 
@@ -67,7 +66,6 @@
                 </div>
                 <div class="cal-grid" id="calendar-grid"></div>
             </div>
-            <aside class="studio-context-rail" aria-label="근무 요약"><div class="studio-rail-heading"><span class="studio-eyebrow">THIS MONTH</span><h2>나의 한 달</h2></div><div class="studio-month-counts" id="studio-month-counts"></div><div class="studio-next"><span class="studio-eyebrow">UP NEXT</span><h3>다가오는 근무</h3><div id="studio-upcoming"></div></div><button type="button" class="studio-text-action" onclick="openMonthStatsModal()">급여 기간 통계 보기 <span>↗</span></button><button type="button" class="studio-text-action" onclick="SettingsUI.openLeave()">내 연차 확인 <span>↗</span></button><p class="studio-rail-note">날짜를 누르면 근무와 메모를 변경할 수 있어요.</p></aside>
             <div id="google-personal-list" class="card" style="padding:12px;" hidden></div>
         </section>
 
@@ -87,7 +85,6 @@
                 </div>
             </div>
 
-            <p class="studio-page-intro">근무가 바뀌면, 급여도 함께.</p>
             <!-- 총지급액 히어로 카드 (좌/우 스와이프 지원) -->
             <div class="salary-month-viewport">
             <div class="salary-hero" id="salary-hero-card" title="좌우로 스와이프하여 이전/다음 달 급여 이동">
@@ -1862,7 +1859,7 @@
     </dialog>
 <script src="./weather-forecast.js?v=2"></script>
 <script src="./today-weather.js?v=4"></script>
-<script src="./studio.js?v=1"></script>
+<script src="./studio.js?v=2"></script>
 <script src="./studio-access.js?v=1"></script>
 </body>
 </html>

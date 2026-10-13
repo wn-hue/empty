@@ -167,24 +167,7 @@ body[data-pref-theme] .bottom-nav .nav-visual>span{position:static!important;wid
 body[data-pref-theme] .bottom-nav .nav-item svg{width:22px;height:22px;color:inherit!important;stroke:currentColor!important}
 body[data-pref-theme] .bottom-nav .nav-outline,body[data-pref-theme] .bottom-nav .nav-item.active .nav-outline{display:initial!important}
 body[data-pref-theme] .bottom-nav .nav-filled{display:none!important}
-@media(min-width:1000px){
- body[data-pref-theme]{padding-left:190px;padding-bottom:20px}
- .studio-brandbar{padding:24px 32px 0}.studio-brandbar>.studio-brand{display:none}
- body[data-pref-theme] .bottom-nav{inset:0 auto 0 0!important;width:190px!important;padding:38px 18px!important;border-right:1px solid var(--studio-line)!important;background:var(--studio-surface)!important}
- .studio-nav-heading{display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:0 14px 36px;color:var(--studio-ink)}.studio-nav-heading strong{font-size:24px;letter-spacing:-1px}.studio-nav-heading small{flex-basis:100%;font-size:10px;margin:6px 0 0 40px;color:var(--studio-muted)}
- body[data-pref-theme] .bottom-nav .nav-capsule{display:flex;flex-direction:column;background:transparent!important;border:0!important;box-shadow:none;padding:0;gap:8px;border-radius:0}
- body[data-pref-theme] .bottom-nav .nav-item{min-height:48px;border-radius:10px}
- body[data-pref-theme] .bottom-nav .nav-visual{flex-direction:row;gap:16px;justify-content:flex-start;padding:12px 18px}
- body[data-pref-theme] .bottom-nav .nav-visual>span{font-size:13px}
- #view-payroll.active{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:18px 24px;align-items:start}
- #view-payroll>.gcal-topbar,#view-payroll>.studio-page-intro{grid-column:1/-1;margin:0}
- #view-payroll>.salary-month-viewport{grid-column:1;grid-row:3}
- #view-payroll>#payroll-estimate-card{grid-column:1;grid-row:4;margin:0}
- #view-payroll>.wage-settings-card{grid-column:1;grid-row:5;margin:0}
- #view-payroll>.payroll-input-card{grid-column:2;grid-row:3/6;margin:0}
- #view-payroll>.payroll-disclosure{grid-column:1/-1;margin:0}
- #view-all{max-width:760px}.meal-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-}
+
 @media(max-width:650px){
  .studio-brandbar{padding:18px 20px 0;gap:10px}.studio-brand{font-size:21px}.studio-mark{width:26px;height:26px;font-size:22px;border-radius:8px}.studio-profile{width:34px;height:34px}.studio-brand-caption{font-size:10px}
  body[data-view] .container,.container{padding:4px 16px 24px!important}
@@ -213,7 +196,7 @@ body[data-pref-theme] .bottom-nav .nav-filled{display:none!important}
 /* Override legacy navigation specificity without changing its event bindings. */
 body[data-pref-theme] .bottom-nav .nav-item .nav-visual,body[data-pref-theme] .bottom-nav .nav-item.active .nav-visual{color:inherit!important;background:transparent!important;min-width:0!important;min-height:0!important;border-radius:0!important;padding:5px!important}
 body[data-pref-theme] .bottom-nav .nav-item .nav-visual>span{display:block!important}
-@media(min-width:1000px){body[data-pref-theme] .bottom-nav .nav-item{width:100%;flex:none}body[data-pref-theme] .bottom-nav .nav-item .nav-visual,body[data-pref-theme] .bottom-nav .nav-item.active .nav-visual{padding:12px 18px!important;flex-direction:row;justify-content:flex-start;width:100%}}
+
 body[data-pref-theme] .first-use-guide{padding:0;background:var(--studio-surface);margin-bottom:14px;border-radius:12px}
 .studio-setup-guide summary{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;padding:15px 20px;color:var(--studio-accent);font-size:12px;font-weight:600;list-style:none}
 .studio-setup-guide summary::-webkit-details-marker{display:none}.studio-setup-guide summary span{color:var(--studio-muted);font-size:10px;font-weight:400}.studio-setup-guide>strong{display:none}.studio-setup-guide p{padding:0 20px}.studio-setup-guide>div{padding:10px 20px 16px}
@@ -225,3 +208,48 @@ body[data-pref-theme] #modal-override .override-header .override-close{width:32p
 body[data-pref-theme] #modal-override #work-panel .opt-btn.no-ot{background:var(--studio-tint)!important;color:var(--studio-accent)!important;border:1px solid var(--studio-line)!important}
 body[data-pref-theme] #modal-override .override-base{background:transparent!important;color:var(--studio-muted)!important;border:0!important}
 body[data-pref-theme] #modal-override #modal-memo-input{font-size:16px!important;min-height:240px!important;background:var(--studio-bg)!important;color:var(--studio-ink)!important;border-color:var(--studio-line)!important;border-radius:12px;padding:16px}
+/* Phone-first, quiet monochrome shell inspired by conversational apps. */
+body[data-pref-theme]{--studio-bg:#fff;--studio-surface:#fff;--studio-ink:#202020;--studio-muted:#707070;--studio-line:#e9e9e9;--studio-tint:#f4f4f4;--studio-accent:#202020;padding-left:0;padding-bottom:calc(100px + env(safe-area-inset-bottom));}
+body[data-pref-theme="dark"]{--studio-bg:#171717;--studio-surface:#212121;--studio-ink:#f1f1f1;--studio-muted:#b0b0b0;--studio-line:#383838;--studio-tint:#2c2c2c;--studio-accent:#ededed;}
+body[data-view] .container,.container{max-width:600px!important;padding:12px 16px 24px!important;}
+body[data-view] .reference-header{display:flex;align-items:center;gap:10px;padding:8px 0 18px!important;min-height:60px;margin:0!important;}
+.studio-menu-button{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:36px;height:40px;border:0;background:transparent;color:var(--studio-ink);border-radius:12px;}
+.studio-menu-button svg{width:23px;height:23px;}
+.header-title-area{min-width:0;flex:1;}
+body[data-pref-theme] .reference-header .month-title-btn,body[data-pref-theme] .header-view-title{font-size:22px;font-weight:600;letter-spacing:-.7px;white-space:nowrap;}
+.header-calendar-actions{gap:0;flex-shrink:0;}
+body[data-pref-theme] .reference-header .icon-button{width:32px;height:40px;padding:6px;}
+body[data-pref-theme] .reference-header .weather-trigger{min-width:48px;width:auto;padding:4px;}
+body[data-pref-theme] .weather-current{font-size:12px!important;gap:3px;}
+#view-calendar.active{display:block;}
+body[data-view="calendar"] #view-calendar .calendar-card{border-radius:12px!important;}
+body[data-pref-theme] .cal-weekdays{padding:12px 0;font-size:11px;}
+body[data-pref-theme] .cal-grid{grid-auto-rows:minmax(92px,1fr)!important;}
+body[data-pref-theme] .cal-day{min-height:92px!important;}
+body[data-pref-theme] .cal-day.today{background:var(--studio-tint)!important;box-shadow:inset 0 0 0 1.5px var(--studio-ink)!important;}
+body[data-pref-theme] .bottom-nav{inset:auto 0 0!important;width:auto!important;padding:10px 16px calc(10px + env(safe-area-inset-bottom))!important;background:linear-gradient(transparent,var(--studio-bg) 20%)!important;}
+.studio-nav-heading{display:none!important;}
+body[data-pref-theme] .bottom-nav .nav-capsule{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));max-width:420px;border-radius:28px;padding:4px;background:var(--studio-surface)!important;border:1px solid var(--studio-line)!important;box-shadow:0 2px 12px #00000006;}
+body[data-pref-theme] .bottom-nav .nav-item{width:auto;flex:initial;min-height:54px;border-radius:24px;color:var(--studio-muted)!important;}
+body[data-pref-theme] .bottom-nav .nav-item.active{background:var(--studio-tint)!important;color:var(--studio-ink)!important;}
+body[data-pref-theme] .bottom-nav .nav-item .nav-visual{flex-direction:column!important;justify-content:center!important;padding:5px!important;gap:4px;}
+body[data-pref-theme] .bottom-nav .nav-item .nav-visual>span{font-size:10px;}
+body[data-pref-theme] #view-payroll.active{display:block;}
+body[data-pref-theme] #view-payroll .salary-hero{padding:24px 8px 22px;border:0!important;border-radius:0;background:transparent!important;}
+body[data-pref-theme] #view-payroll .period-tag{background:transparent;color:var(--studio-muted)!important;padding:0;font-size:11px;}
+body[data-pref-theme] #view-payroll .hero-amount{font-size:36px;font-weight:600;letter-spacing:-1.2px;}
+body[data-pref-theme] #view-payroll .card,body[data-pref-theme] #leave-settings-dialog .card{padding:20px;border-radius:16px;margin:16px 0;}
+body[data-pref-theme] #view-payroll .sms-open-btn{border-radius:20px;padding:8px 12px;}
+body[data-pref-theme] .all-settings-card,body[data-pref-theme] .all-shortcuts,body[data-pref-theme] .all-account-card{padding:18px;border-radius:16px;margin-bottom:16px;}
+body[data-pref-theme] .all-topline{margin-bottom:18px;}
+body[data-pref-theme] .all-page-title{font-size:18px;}
+body[data-pref-theme] .all-shortcut-icon{background:transparent!important;border-radius:0;color:var(--studio-ink)!important;}
+body[data-pref-theme] .all-settings-card .group-select{background:var(--studio-tint)!important;color:var(--studio-ink)!important;width:100px;border-radius:20px;}
+body[data-pref-theme] .meal-date-card{padding:18px;border-radius:16px;}
+body[data-pref-theme] .meal-grid{grid-template-columns:1fr;}
+body[data-pref-theme] .meal-card{border-radius:16px;}
+body[data-pref-theme] #modal-override .override-header{background:var(--studio-surface)!important;padding:24px 20px 16px;}
+body[data-pref-theme] #modal-override .editor-content{padding:18px 20px 24px;}
+body[data-pref-theme] .btn-save,body[data-pref-theme] .sms-primary-btn{border-radius:24px;}
+body[data-pref-theme] dialog::backdrop,body[data-pref-theme] .modal-overlay{background:#0006;backdrop-filter:none;}
+@media(max-width:360px){body[data-view] .container{padding-left:10px!important;padding-right:10px!important;}body[data-pref-theme] .reference-header .month-title-btn{font-size:20px;}body[data-pref-theme] .reference-header .icon-button{width:28px!important;}body[data-pref-theme] .reference-header .weather-trigger{min-width:44px!important;}.reference-header{gap:5px!important;}}
