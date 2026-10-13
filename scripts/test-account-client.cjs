@@ -4,11 +4,11 @@ const clone=x=>JSON.parse(JSON.stringify(x)), blank=C.normalize({});
 const memo=x=>C.normalize({shift_day_memos:x});
 const version=(data)=>({revision:crypto.randomUUID().replace(/-/g,''),updatedAt:new Date().toISOString(),data:clone(data)});
 const flush=async()=>{for(let n=0;n<12;n++)await new Promise(resolve=>setImmediate(resolve));};
-function device(server,{local={},user='A',connected=true,cloudConnected=true}={}) {
+function device(server,{local={},user='A',connected=true,cloudConnected=true,provider='google'}={}) {
     const saved=new Map(Object.entries(local)),elements=new Map(),events={},timers=new Map();let timerId=0;
     function element(id){if(!elements.has(id))elements.set(id,{textContent:'',hidden:false,open:false,attributes:{},setAttribute(k,v){this.attributes[k]=v},handlers:{},children:[],addEventListener(k,f){this.handlers[k]=f;},replaceChildren(){this.children=[];},append(x){this.children.push(x);},close(){this.open=false;},showModal(){this.open=true;}});return elements.get(id);}
-    const d={user,connected,cloudConnected,disabled:false,beforeWrite:null,calls:[],saved,element};
-    const ctx={AccountDataCore:C,navigator:{onLine:true},crypto,URLSearchParams,Date,console,location:{search:''},switchView:()=>{},
+    const d={user,connected,cloudConnected,provider,disabled:false,reconnect:false,beforeWrite:null,calls:[],saved,element};
+    const ctx={AccountDataCore:C,navigator:{onLine:true},crypto,URLSearchParams,Date,console,location:{search:''},switchView:v=>{d.view=v;},
         localStorage:{getItem:k=>saved.get(k)??null,setItem:(k,v)=>saved.set(k,String(v)),removeItem:k=>saved.delete(k)},
         document:{hidden:false,getElementById:element,createElement:()=>element('new'+Math.random()),addEventListener:(k,f)=>events[k]=f},
         addEventListener:(k,f)=>events[k]=f,
@@ -17,8 +17,9 @@ function device(server,{local={},user='A',connected=true,cloudConnected=true}={}
         fetch:async(url,options)=>{
             const action=new URL(url,'https://shift.example').searchParams.get('action');d.calls.push(action);
             const result=(body,status=200)=>({ok:status===200,status,json:async()=>clone(body)});
-            if(action==='status')return result({connected:d.connected,cloudConnected:d.cloudConnected,user:{id:d.user,email:d.user+'@example.com'},csrf:d.user+'-csrf'});
+            if(action==='status')return result({connected:d.connected,cloudConnected:d.cloudConnected,provider:d.provider,user:{id:d.user,email:d.user+'@example.com'},csrf:d.user+'-csrf'});
             if(action==='logout'){d.connected=false;d.cloudConnected=false;return result({ok:true});}
+            if(d.reconnect)return result({error:'RECONNECT',message:'Reconnect'},401);
             if(d.disabled)return result({error:'DRIVE_SETUP',message:'Enable Google Drive API'},403);
             if(options.headers['X-Shift-CSRF']!==d.user+'-csrf')return result({error:'CSRF'},403);
             if(action==='cloud-read')return result({versions:server[d.user]||[]});
@@ -38,31 +39,18 @@ function device(server,{local={},user='A',connected=true,cloudConnected=true}={}
     d.timers=timers;return d;
 }
 async function run(){
+    const expiredApple=device({}, {provider:'apple'});await expiredApple.start();expiredApple.reconnect=true;await expiredApple.click('account-sync-now');assert.equal(expiredApple.element('apple-login').hidden,false);assert.equal(expiredApple.element('apple-login').attributes['aria-label'],'Apple 계정 다시 연결');
     const server={A:[version(memo({'2026-10-01':'original'}))],B:[version(memo({'2026-10-09':'other account'}))]};
     const a=device(server),b=device(server);await a.start();await b.start();
-    assert.equal(a.element('account-management-dialog').open,false);
-    await a.click('account-menu-button');assert.equal(a.element('account-management-dialog').open,true);
-    const drawer=a.element('account-management-dialog');drawer.getBoundingClientRect=()=>({left:0,right:320,top:0,bottom:800});
-    drawer.handlers.click({target:drawer,clientX:30,clientY:60});assert.equal(drawer.open,true);
-    // Native select releases or synthetic clicks must not dismiss the drawer.
-    drawer.handlers.click({target:drawer,clientX:0,clientY:0});assert.equal(drawer.open,true);
-    drawer.handlers.pointerdown({target:a.element('group-select'),clientX:30,clientY:300});
-    drawer.handlers.click({target:drawer,clientX:400,clientY:60});assert.equal(drawer.open,true);
-    drawer.handlers.pointerdown({target:drawer,clientX:400,clientY:60});
-    drawer.handlers.pointercancel();drawer.handlers.click({target:drawer,clientX:400,clientY:60});assert.equal(drawer.open,true);
-    drawer.handlers.pointerdown({target:drawer,clientX:400,clientY:60});
-    drawer.handlers.click({target:drawer,clientX:400,clientY:60});assert.equal(drawer.open,false);
-    await a.click('account-menu-button');
-    await a.click('account-management-close');assert.equal(a.element('account-management-dialog').open,false);
     const callback=device({});callback.ctx.location.search='?cloud=connected';await callback.start();
-    assert.equal(callback.element('account-management-dialog').open,true,'OAuth return opens account management');
+    assert.equal(callback.view,'all','OAuth return opens the account page');
     assert.equal(a.snapshot().shift_day_memos['2026-10-01'],'original');
     a.change('shift_day_memos',{'2026-10-01':'original','2026-10-02':'a edit'});await a.tick();
     b.change('shift_day_memos',{'2026-10-01':'original','2026-10-03':'b edit'});await b.tick();
     assert.deepEqual(server.A[0].data.shift_day_memos,{'2026-10-01':'original','2026-10-02':'a edit','2026-10-03':'b edit'});
     await a.click('account-sync-now');assert.deepEqual(a.snapshot(),server.A[0].data);
     a.change('shift_bonus_sms_reference_v1',{gross:1000000,total:50000});await a.tick();
-    await b.click('account-sync-now');assert.deepEqual(b.snapshot().shift_bonus_sms_reference_v1,{gross:1000000,total:50000});
+    await b.click('account-sync-now');assert.deepEqual(b.snapshot().shift_bonus_sms_reference_v1,{rate:0.05});
     // Local edits during upload must still be sent on the next save.
     a.change('shift_day_memos',{...a.snapshot().shift_day_memos,'2026-10-04':'first'});
     a.beforeWrite=async()=>{a.beforeWrite=null;

@@ -1,0 +1,13 @@
+{
+  "planner-core.js": "248ebc40391e9fd96f5750e75d272f9467889cb03862b0dd43c6bd6fe529fc52",
+  "payroll-sms.js": "2536fabbc3e4bbcb04f3a4a2c2007cfc2d54b60133fb3e4d3fb2aaa8d5025a9a",
+  "payroll-estimate.js": "be64c2f797c6d37744004873ff176cba184c26b70f13397f53d98b9931ae4621",
+  "account-data-core.js": "19f3eb18f3779571f4f8ec19cacef6652c7a617d69d3f76cb2ad4359e3f7f311",
+  "google-sync-core.js": "f6ae44e03a5deb3c17f01fb65277c1dfe3a7e1bcdf737742eefccb9d539398a4",
+  "calendar-integration.js": "3eeb841c503e8fbd3e0dd365a7e4c77f7ac8236254671c436cf586dbae474aa0",
+  "schedule-share.js": "8c9a35a6427d16b6744fdb234e0b3a23abd77984d81ed46829dfa4ce05f96391",
+  "shift-tools.js": "2b76068ea9e7ee1547a4ae38d980e6b0db13918d12e85bd50d99be47cf48a7a0",
+  "today-menu.js": "eccc3311138d3d1972286618415c83b76e66ac061c90fcae112c2e1e2ec6fa7d",
+  "weather-forecast.js": "c10de8f516393a42208a30d64ae8632ed2cce837b1ca4f75d18e780cd15fbb8a",
+  "today-weather.js": "4631258a7b020b6922a6073e1a262338a9c8e300db9ef7ed2286051044bb5f28"
+}

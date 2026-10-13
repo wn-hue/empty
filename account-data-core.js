@@ -1,7 +1,7 @@
 (function (root) {
     'use strict';
     const keys = ['shift_salary_config_master','shift_active_group','shift_day_memos','shift_overrides_A','shift_overrides_B','shift_overrides_C','shift_payroll_sms_reference_v1','shift_bonus_sms_reference_v1'];
-    const types = new Set(['SPECIAL_DAY','SPECIAL_NIGHT','LEAVE','NO_OT','HALF_PRE','HALF_POST','UNPAID_HALF_PRE','UNPAID_HALF_POST','UNPAID_OFF','FORCED_OFF']);
+    const types = new Set(['DAY','NIGHT','OFF','SPECIAL_DAY','SPECIAL_NIGHT','SPECIAL_DAY_NO_OT','SPECIAL_NIGHT_NO_OT','LEAVE','NO_OT','HALF_PRE','HALF_POST','UNPAID_HALF_PRE','UNPAID_HALF_POST','UNPAID_OFF','FORCED_OFF']);
     const object = x => x !== null && typeof x === 'object' && !Array.isArray(x);
     function dateOK(x) { return typeof x === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(x) && Number.isFinite(Date.parse(x+'T00:00:00Z')) && new Date(x+'T00:00:00Z').toISOString().slice(0,10) === x; }
     function normalize(input) {
@@ -17,10 +17,11 @@
             if (!object(value)) throw Error('저장할 설정 형식을 확인하세요.');
             const safe = {};
             if (key === 'shift_salary_config_master') {
-                const allowed = ['hireDate','totalLeave','leaveByYear','baseHourly','ordinaryHourly','baseHours','dutyPay','seniorityPay','applyRetroPay','holidayBonus'];
+                const allowed = ['hireDate','employmentMonth','totalLeave','leaveByYear','baseHourly','ordinaryHourly','baseHours','dutyPay','seniorityPay','applyRetroPay','holidayBonus'];
                 if (Object.keys(value).some(k => !allowed.includes(k))) throw Error('알 수 없는 급여 설정입니다.');
                 for (const [k,v] of Object.entries(value)) {
-                    if (k === 'hireDate') { if (v !== '' && !dateOK(v)) throw Error('입사일을 확인하세요.'); }
+                    if (k === 'employmentMonth') continue;
+                    else if (k === 'hireDate') { if (v !== '' && !dateOK(v)) throw Error('입사일을 확인하세요.'); }
                     else if (k === 'applyRetroPay') { if (typeof v !== 'boolean') throw Error('수당 설정을 확인하세요.'); }
                     else if (k === 'leaveByYear') {
                         if (!object(v) || Object.keys(v).length > 100 || Object.entries(v).some(([year,n]) => !/^\d{4}$/.test(year) || !Number.isFinite(n) || n < 0 || n > 366)) throw Error('연차 설정을 확인하세요.');
@@ -28,8 +29,12 @@
                     safe[k] = v;
                 }
             } else if (['shift_payroll_sms_reference_v1','shift_bonus_sms_reference_v1'].includes(key)) {
-                if (Object.keys(value).some(k => !['gross','total'].includes(k)) || !Number.isSafeInteger(value.gross) || value.gross <= 0 || value.gross > 1000000000 || !Number.isSafeInteger(value.total) || value.total < 0 || value.total > value.gross) throw Error('공제 기준을 확인하세요.');
-                safe.gross = value.gross; safe.total = value.total;
+                if(value.model==='monthly-insurance'){if(key!=='shift_payroll_sms_reference_v1'||Object.keys(value).length!==6||Object.keys(value).some(k=>!['rate','model','fixedInsurance','taxRate','employmentRate','otherFixed'].includes(k))||!['rate','taxRate','employmentRate'].every(k=>Number.isFinite(value[k])&&value[k]>=0&&value[k]<=1)||!['fixedInsurance','otherFixed'].every(k=>Number.isSafeInteger(value[k])&&value[k]>=0&&value[k]<=1000000000)||value.taxRate+value.employmentRate>1)throw Error('공제 기준을 확인하세요.');Object.assign(safe,value);}
+                else if (Object.keys(value).length === 1 && Number.isFinite(value.rate) && value.rate >= 0 && value.rate <= 1) safe.rate=value.rate;
+                else {
+                    if (Object.keys(value).some(k => !['gross','total'].includes(k)) || !Number.isSafeInteger(value.gross) || value.gross <= 0 || value.gross > 1000000000 || !Number.isSafeInteger(value.total) || value.total < 0 || value.total > value.gross) throw Error('공제 기준을확인하세요.');
+                    safe.rate = value.total / value.gross;
+                }
             } else {
                 if (Object.keys(value).length > 10000) throw Error('저장할 날짜가 너무 많습니다.');
                 for (const [date,v] of Object.entries(value)) {

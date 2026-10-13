@@ -1,0 +1,61 @@
+name: ShiftCalAlarms
+options:
+  deploymentTarget:
+    iOS: '26.0'
+settings:
+  base:
+    SWIFT_VERSION: '5.0'
+    SWIFT_STRICT_CONCURRENCY: complete
+    DEVELOPMENT_TEAM: ''
+targets:
+  ShiftCalAlarms:
+    type: application
+    platform: iOS
+    sources: [Sources]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.wnhue.shiftstudio.alarms
+        MARKETING_VERSION: '1.0'
+        CURRENT_PROJECT_VERSION: '1'
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        TARGETED_DEVICE_FAMILY: '1'
+        GENERATE_INFOPLIST_FILE: YES
+    info:
+      path: Generated/Info.plist
+      properties:
+        CFBundleDisplayName: Shift Studio
+        CFBundleURLTypes: [{CFBundleURLSchemes: [shiftstudio]}]
+        NSCalendarsFullAccessUsageDescription: 선택한 캘린더 일정을 근무표에 표시하고 근무별 알람을 예약합니다. 캘린더의 일정은 수정하지 않습니다.
+        NSAlarmKitUsageDescription: 내 근무표에 맞춰 주간 06시 30분, 야간 18시 30분 알람을 예약합니다.
+        ITSAppUsesNonExemptEncryption: false
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UILaunchScreen: {}
+        UIBackgroundModes: [fetch]
+        BGTaskSchedulerPermittedIdentifiers: [com.wnhue.shiftstudio.alarms.refresh]
+  ShiftCalAlarmsTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [Tests]
+    dependencies:
+      - target: ShiftCalAlarms
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.wnhue.shiftstudio.alarms.tests
+  ShiftCalUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [UITests]
+    dependencies:
+      - target: ShiftCalAlarms
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.wnhue.shiftstudio.alarms.uitests
+schemes:
+  ShiftCalAlarms:
+    build:
+      targets:
+        ShiftCalAlarms: all
+    test:
+      targets: [ShiftCalAlarmsTests, ShiftCalUITests]
